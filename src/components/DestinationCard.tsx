@@ -3,6 +3,8 @@ import type { Map as MapboxMap } from 'mapbox-gl'
 import type { RankedDestination } from '../utils/rankDestinations'
 import type { UserProfile } from '../types'
 import { fetchRoutes, drawRoutes, clearRoutes, setDestination } from '../utils/mapRoutes'
+import { calculateCosts } from '../utils/costEngine'
+import type { FuelPrices } from '../utils/costEngine'
 
 interface DestinationCardProps {
   ranked: RankedDestination
@@ -13,6 +15,9 @@ interface DestinationCardProps {
   attendees: UserProfile[]
   attendeeColours: Record<string, string>
   onViewOnMap: () => void
+  nights?: number
+  maxBudget?: number
+  fuelPrices?: FuelPrices
 }
 
 const CREW_COLOURS = [
@@ -56,8 +61,47 @@ export default function DestinationCard({
   attendees,
   attendeeColours,
   onViewOnMap,
+  nights = 1,
+  maxBudget = 500,
+  fuelPrices = { petrol: 1.90, diesel: 1.85 },
 }: DestinationCardProps) {
   const { destination: dest, routes, estimatedCostPerPerson, overBudget } = ranked
+
+  // Build distancesKm map for mini cost preview
+  const distancesKm: Record<string, number> = {}
+  const attendeesWithLocation = attendees.filter(
+    (a) => a.homeLocation && typeof a.homeLocation.lat === 'number'
+  )
+  attendeesWithLocation.forEach((a) => {
+    const route = routes.find((r) => r.memberUid === a.uid)
+    if (route) distancesKm[a.uid] = route.distanceKm
+  })
+
+  const miniBreakdown =
+    attendeesWithLocation.length > 0
+      ? calculateCosts({
+          attendees: attendeesWithLocation,
+          distancesKm,
+          destination: dest,
+          nights,
+          maxBudget,
+          fuelPrices,
+          dailyFoodRate: 30,
+          lineItems: [],
+        })
+      : null
+
+  // Mini bar proportions (fuel / camp / food) based on average member
+  const avgFuel = miniBreakdown
+    ? miniBreakdown.members.reduce((s, m) => s + m.fuelCost, 0) / miniBreakdown.members.length
+    : 0
+  const avgCamp = miniBreakdown
+    ? miniBreakdown.members.reduce((s, m) => s + m.campsiteCost, 0) / miniBreakdown.members.length
+    : 0
+  const avgFood = miniBreakdown
+    ? miniBreakdown.members.reduce((s, m) => s + m.foodCost, 0) / miniBreakdown.members.length
+    : 0
+  const miniTotal = avgFuel + avgCamp + avgFood || 1
   const isTopRanked = index < 3
 
   const driveTimes = routes.map((r) => r.durationMinutes)
@@ -319,38 +363,92 @@ export default function DestinationCard({
         {/* Cost + budget */}
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
             marginBottom: '12px',
-            flexWrap: 'wrap',
-            gap: '6px',
           }}
         >
-          <span
+          <div
             style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: '15px',
-              fontWeight: '600',
-              color: overBudget ? '#E07A5F' : 'var(--color-charcoal)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '6px',
+              marginBottom: miniBreakdown ? '6px' : '0',
             }}
           >
-            ~${Math.round(estimatedCostPerPerson)} per person
-          </span>
-          {overBudget && (
             <span
               style={{
-                fontSize: '12px',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '15px',
                 fontWeight: '600',
-                color: '#E07A5F',
-                background: 'rgba(224,122,95,0.12)',
-                borderRadius: '100px',
-                padding: '3px 9px',
-                border: '1px solid rgba(224,122,95,0.3)',
+                color: overBudget ? '#E07A5F' : 'var(--color-charcoal)',
               }}
             >
-              Over budget
+              ~${Math.round(estimatedCostPerPerson)} per person
             </span>
+            {overBudget && (
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#E07A5F',
+                  background: 'rgba(224,122,95,0.12)',
+                  borderRadius: '100px',
+                  padding: '3px 9px',
+                  border: '1px solid rgba(224,122,95,0.3)',
+                }}
+              >
+                Over budget
+              </span>
+            )}
+          </div>
+
+          {/* Mini cost preview bar */}
+          {miniBreakdown && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  flex: 1,
+                  height: '6px',
+                  borderRadius: '3px',
+                  overflow: 'hidden',
+                  background: 'rgba(140,133,120,0.12)',
+                  display: 'flex',
+                }}
+              >
+                <div
+                  style={{
+                    width: `${(avgFuel / miniTotal) * 100}%`,
+                    height: '100%',
+                    backgroundColor: '#4A6741',
+                  }}
+                />
+                <div
+                  style={{
+                    width: `${(avgCamp / miniTotal) * 100}%`,
+                    height: '100%',
+                    backgroundColor: '#C4893B',
+                  }}
+                />
+                <div
+                  style={{
+                    width: `${(avgFood / miniTotal) * 100}%`,
+                    height: '100%',
+                    backgroundColor: '#B85C38',
+                  }}
+                />
+              </div>
+              <span
+                style={{
+                  fontFamily: 'DM Sans, system-ui, sans-serif',
+                  fontSize: '11px',
+                  color: 'var(--color-stone)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                fuel · camp · food
+              </span>
+            </div>
           )}
         </div>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
 import { db, auth } from '../firebase'
@@ -30,6 +31,7 @@ export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([])
   const [loading, setLoading] = useState(true)
   const [uid, setUid] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   // Listen for auth state
   useEffect(() => {
@@ -205,12 +207,14 @@ export default function TripsPage() {
               return (
                 <div
                   key={trip.id}
+                  onClick={() => navigate(`/trips/${trip.id}`)}
                   style={{
                     background: 'var(--color-surface)',
                     borderRadius: '14px',
                     border: '1px solid var(--color-border)',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                     padding: '16px',
+                    cursor: 'pointer',
                   }}
                 >
                   <div

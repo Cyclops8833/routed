@@ -5,6 +5,7 @@ import Landing from './pages/Landing'
 import Onboarding from './pages/Onboarding'
 import MapPage from './pages/Map'
 import TripsPage from './pages/Trips'
+import TripDetailPage from './pages/TripDetail'
 import CrewPage from './pages/Crew'
 import ProfilePage from './pages/Profile'
 
@@ -54,6 +55,7 @@ function AppContent() {
       <Routes>
         <Route path="/map" element={<MapPage />} />
         <Route path="/trips" element={<TripsPage />} />
+        <Route path="/trips/:tripId" element={<TripDetailPage />} />
         <Route path="/crew" element={<CrewPage />} />
         <Route path="/profile" element={<ProfilePage profile={profile} />} />
         <Route path="*" element={<Navigate to="/map" replace />} />

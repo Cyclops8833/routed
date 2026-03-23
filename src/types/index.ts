@@ -34,4 +34,10 @@ export interface Trip {
   selectedDestinationIds: string[]
   status: 'proposed' | 'voting' | 'confirmed' | 'active' | 'completed'
   createdAt: Date
+  confirmedDestinationId?: string
+  costConfig?: {
+    fuelPrices: { petrol: number; diesel: number }
+    dailyFoodRate: number
+    lineItems: Array<{ id: string; label: string; amount: number; addedByUid: string }>
+  }
 }
