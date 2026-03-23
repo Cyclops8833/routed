@@ -5,6 +5,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { db } from '../firebase'
 import { MAPBOX_TOKEN } from '../config'
 import type { UserProfile } from '../types'
+import TripSheet from '../components/TripSheet'
 
 const MAP_STYLE_TERRAIN = 'mapbox://styles/mapbox/outdoors-v12'
 const MAP_STYLE_SATELLITE = 'mapbox://styles/mapbox/satellite-streets-v12'
@@ -91,6 +92,8 @@ function buildPopupHTML(member: UserProfile): string {
   `
 }
 
+type SheetMode = 'closed' | 'full' | 'peek'
+
 export default function MapPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
@@ -98,6 +101,8 @@ export default function MapPage() {
   const [mapLoaded, setMapLoaded] = useState(false)
   const [crewLoaded, setCrewLoaded] = useState(false)
   const [isSatellite, setIsSatellite] = useState(false)
+  const [sheetMode, setSheetMode] = useState<SheetMode>('closed')
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
 
   // Initialise map
   useEffect(() => {
@@ -170,6 +175,11 @@ export default function MapPage() {
 
           markersRef.current.push(marker)
           bounds.extend([member.homeLocation!.lng, member.homeLocation!.lat])
+
+          // Use first member with location as current user proxy (or auth user in a real app)
+          if (index === 0) {
+            setCurrentUser(member)
+          }
         })
 
         if (membersWithLocation.length > 0) {
@@ -195,10 +205,28 @@ export default function MapPage() {
   }
 
   const handlePlanTrip = () => {
-    console.log('Plan a Trip FAB tapped — wired up in Stage 3')
+    setSheetMode('full')
+  }
+
+  const handleSheetClose = () => {
+    setSheetMode('closed')
+  }
+
+  const handleSheetPeek = () => {
+    setSheetMode('peek')
   }
 
   const isLoading = !mapLoaded || !crewLoaded
+
+  // Sheet height based on mode
+  const sheetHeight =
+    sheetMode === 'full'
+      ? 'min(80vh, calc(100dvh - var(--tab-bar-height) - env(safe-area-inset-bottom) - 20px))'
+      : sheetMode === 'peek'
+      ? '32vh'
+      : '0px'
+
+  const sheetVisible = sheetMode !== 'closed'
 
   return (
     <div
@@ -285,7 +313,7 @@ export default function MapPage() {
         {isSatellite ? '🗺 Terrain' : '🛰 Satellite'}
       </button>
 
-      {/* Plan a Trip FAB */}
+      {/* Plan a Trip FAB — hidden when sheet is open */}
       <button
         onClick={handlePlanTrip}
         aria-label="Plan a Trip"
@@ -304,7 +332,8 @@ export default function MapPage() {
           alignItems: 'center',
           justifyContent: 'center',
           boxShadow: '0 4px 16px rgba(74, 103, 65, 0.4)',
-          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease, visibility 0s',
+          visibility: sheetVisible ? 'hidden' : 'visible',
         }}
         onMouseEnter={(e) => {
           const btn = e.currentTarget as HTMLButtonElement
@@ -327,6 +356,56 @@ export default function MapPage() {
           <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
       </button>
+
+      {/* Bottom Sheet */}
+      <div
+        onClick={sheetMode === 'peek' ? () => setSheetMode('full') : undefined}
+        style={{
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 'calc(var(--tab-bar-height) + env(safe-area-inset-bottom))',
+          height: sheetHeight,
+          zIndex: 30,
+          background: 'var(--color-surface)',
+          borderRadius: sheetMode === 'peek' ? '16px 16px 0 0' : '20px 20px 0 0',
+          boxShadow: sheetVisible ? '0 -4px 24px rgba(0,0,0,0.15)' : 'none',
+          transform: sheetVisible ? 'translateY(0)' : 'translateY(100%)',
+          transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+          overflow: 'hidden',
+          cursor: sheetMode === 'peek' ? 'pointer' : 'default',
+        }}
+      >
+        {sheetVisible && (
+          <TripSheet
+            mapRef={mapRef}
+            currentUser={currentUser}
+            onClose={handleSheetClose}
+            onPeek={handleSheetPeek}
+          />
+        )}
+      </div>
+
+      {/* Backdrop overlay when sheet is full */}
+      {sheetMode === 'full' && (
+        <div
+          onClick={handleSheetClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 29,
+            background: 'rgba(0,0,0,0.2)',
+            animation: 'fadeIn 0.2s ease',
+          }}
+        />
+      )}
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </div>
   )
 }

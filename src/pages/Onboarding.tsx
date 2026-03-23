@@ -170,7 +170,7 @@ export default function Onboarding({ user, existingProfile }: OnboardingProps) {
 
   // Validation
   function canAdvanceStep() {
-    if (step === 0) return displayName.trim().length > 0
+    if (step === 0) return true // blank falls back to firstName
     if (step === 1) return geocodeResult !== null
     if (step === 2) {
       return vehicles.length > 0 && vehicles.every((v) => v.name.trim().length > 0 && Number(v.consumption) > 0)
@@ -192,7 +192,7 @@ export default function Onboarding({ user, existingProfile }: OnboardingProps) {
 
       const profileData: Omit<UserProfile, 'createdAt'> & { createdAt: unknown } = {
         uid: user.uid,
-        displayName: displayName.trim(),
+        displayName: displayName.trim() || firstName,
         email: user.email ?? '',
         photoURL: user.photoURL,
         homeLocation: geocodeResult,
