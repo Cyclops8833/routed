@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Moss green background circle -->
+  <circle cx="256" cy="256" r="256" fill="#4A6741"/>
+
+  <!-- Topo contour arcs (white, 15% opacity) -->
+  <ellipse cx="256" cy="256" rx="230" ry="170" fill="none" stroke="white" stroke-width="4" opacity="0.15"/>
+  <ellipse cx="256" cy="256" rx="175" ry="125" fill="none" stroke="white" stroke-width="4" opacity="0.15"/>
+  <ellipse cx="256" cy="256" rx="118" ry="82" fill="none" stroke="white" stroke-width="4" opacity="0.15"/>
+
+  <!-- Letter R centred -->
+  <text
+    x="256"
+    y="330"
+    text-anchor="middle"
+    fill="white"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="240"
+    font-weight="700"
+  >R</text>
+</svg>

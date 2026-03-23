@@ -14,6 +14,9 @@ interface TripSheetProps {
   currentUser: UserProfile | null
   onClose: () => void
   onPeek: () => void
+  onDragHandlePointerDown?: (e: React.PointerEvent<HTMLDivElement>) => void
+  onDragHandlePointerMove?: (e: React.PointerEvent<HTMLDivElement>) => void
+  onDragHandlePointerUp?: (e: React.PointerEvent<HTMLDivElement>) => void
 }
 
 type SheetView = 'form' | 'results'
@@ -37,7 +40,7 @@ function calcNights(start: string, end: string): number {
   return Math.max(1, Math.ceil((e - s) / 86400000))
 }
 
-export default function TripSheet({ mapRef, currentUser, onClose, onPeek }: TripSheetProps) {
+export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDragHandlePointerDown, onDragHandlePointerMove, onDragHandlePointerUp }: TripSheetProps) {
   const navigate = useNavigate()
 
   // Form state
@@ -185,12 +188,18 @@ export default function TripSheet({ mapRef, currentUser, onClose, onPeek }: Trip
     >
       {/* Drag handle */}
       <div
+        onPointerDown={onDragHandlePointerDown}
+        onPointerMove={onDragHandlePointerMove}
+        onPointerUp={onDragHandlePointerUp}
         style={{
           display: 'flex',
           justifyContent: 'center',
           paddingTop: '10px',
           paddingBottom: '4px',
           flexShrink: 0,
+          cursor: 'grab',
+          touchAction: 'none',
+          userSelect: 'none',
         }}
       >
         <div

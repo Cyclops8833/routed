@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import type { ReactElement } from 'react'
+import { useNotifications } from '../contexts/NotificationContext'
 
 interface Tab {
   path: string
@@ -103,6 +104,7 @@ const tabs: Tab[] = [
 
 export default function TabBar() {
   const location = useLocation()
+  const { unvotedTrips } = useNotifications()
 
   return (
     <nav
@@ -115,6 +117,7 @@ export default function TabBar() {
         paddingBottom: 'env(safe-area-inset-bottom)',
         backgroundColor: 'var(--color-surface)',
         borderTop: '1px solid var(--color-border)',
+        boxShadow: '0 -1px 0 rgba(0,0,0,0.06)',
         display: 'flex',
         alignItems: 'stretch',
         zIndex: 100,
@@ -122,6 +125,7 @@ export default function TabBar() {
     >
       {tabs.map((tab) => {
         const isActive = location.pathname === tab.path
+        const showDot = tab.path === '/trips' && unvotedTrips > 0
         return (
           <NavLink
             key={tab.path}
@@ -140,9 +144,26 @@ export default function TabBar() {
               fontWeight: isActive ? '600' : '400',
               transition: 'color 0.15s ease',
               WebkitTapHighlightColor: 'transparent',
+              position: 'relative',
             }}
           >
-            {tab.icon(isActive)}
+            <div style={{ position: 'relative', display: 'inline-flex' }}>
+              {tab.icon(isActive)}
+              {showDot && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '-1px',
+                    right: '-3px',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: '#7C5CBF',
+                    border: '1.5px solid var(--color-surface)',
+                  }}
+                />
+              )}
+            </div>
             <span>{tab.label}</span>
           </NavLink>
         )

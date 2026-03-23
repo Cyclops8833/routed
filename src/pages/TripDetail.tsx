@@ -18,6 +18,8 @@ import type { Destination } from '../data/destinations'
 import { calculateCosts } from '../utils/costEngine'
 import type { CostLineItem, FuelPrices, CostBreakdown as CostBreakdownData } from '../utils/costEngine'
 import CostBreakdown from '../components/CostBreakdown'
+import VotingPanel from '../components/VotingPanel'
+import { openVoting, startTrip, completeTrip } from '../utils/tripActions'
 import { getDocs, query, where } from 'firebase/firestore'
 
 // ────────────────────────────────────────────────────────────
@@ -374,6 +376,7 @@ export default function TripDetailPage() {
   if (tripLoading) {
     return (
       <div
+        className="topo-bg"
         style={{
           minHeight: 'calc(100dvh - var(--tab-bar-height) - env(safe-area-inset-bottom))',
           display: 'flex',
@@ -381,6 +384,7 @@ export default function TripDetailPage() {
           justifyContent: 'center',
           flexDirection: 'column',
           gap: '16px',
+          backgroundColor: 'var(--color-base)',
         }}
       >
         <div className="spinner" />
@@ -424,9 +428,51 @@ export default function TripDetailPage() {
   }
 
   const statusCfg = STATUS_CONFIG[trip.status] ?? STATUS_CONFIG.proposed
+  const isCreator = currentUid === trip.creatorUid
   const isConfirmedOrBeyond = ['confirmed', 'active', 'completed'].includes(trip.status)
   const isEditable = ['confirmed', 'active'].includes(trip.status)
   const countdown = countdownText(trip.dateRange.start)
+
+  // Voting deadline state
+  const [deadlineInput, setDeadlineInput] = useState('')
+  const [openingVoting, setOpeningVoting] = useState(false)
+  const [startingTrip, setStartingTrip] = useState(false)
+  const [completingTrip, setCompletingTrip] = useState(false)
+
+  async function handleOpenVoting() {
+    if (!tripId) return
+    setOpeningVoting(true)
+    try {
+      const deadline = deadlineInput ? new Date(deadlineInput) : undefined
+      await openVoting(tripId, deadline)
+    } finally {
+      setOpeningVoting(false)
+    }
+  }
+
+  async function handleStartTrip() {
+    if (!tripId) return
+    setStartingTrip(true)
+    try {
+      await startTrip(tripId)
+    } finally {
+      setStartingTrip(false)
+    }
+  }
+
+  async function handleCompleteTrip() {
+    if (!tripId) return
+    setCompletingTrip(true)
+    try {
+      await completeTrip(tripId)
+    } finally {
+      setCompletingTrip(false)
+    }
+  }
+
+  const departureIsFuture = trip.dateRange.start
+    ? new Date(trip.dateRange.start).getTime() > Date.now()
+    : false
 
   const selectedDestinations: Destination[] = trip.selectedDestinationIds
     .map((id) => allDestinations.find((d) => d.id === id))
@@ -479,7 +525,15 @@ export default function TripDetailPage() {
       <div style={{ padding: '16px 20px 40px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
         {/* Trip name + status */}
-        <div>
+        <div
+          className="topo-bg grain-overlay"
+          style={{
+            margin: '-16px -20px 0',
+            padding: '16px 20px 20px',
+            backgroundColor: 'var(--color-base)',
+            borderBottom: '1px solid var(--color-border)',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '6px' }}>
             <h1
               style={{
@@ -524,23 +578,274 @@ export default function TripDetailPage() {
               <span>📅 {formatDateRange(trip.dateRange)}</span>
             )}
             {countdown && (
-              <span
-                style={{
-                  color: '#4A6741',
-                  fontWeight: '600',
-                }}
-              >
+              <span style={{ color: '#4A6741', fontWeight: '600' }}>
                 {countdown}
               </span>
             )}
           </div>
         </div>
 
+        {/* ────── STATUS STEPPER ────── */}
+        {(() => {
+          const steps: Trip['status'][] = ['proposed', 'voting', 'confirmed', 'active', 'completed']
+          const currentIdx = steps.indexOf(trip.status)
+          return (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0',
+                overflowX: 'auto',
+                paddingBottom: '2px',
+              }}
+            >
+              {steps.map((step, idx) => {
+                const isPast = idx < currentIdx
+                const isCurrent = idx === currentIdx
+                const label = STATUS_CONFIG[step].label
+                return (
+                  <div
+                    key={step}
+                    style={{ display: 'flex', alignItems: 'center', flex: idx < steps.length - 1 ? 1 : 'none' }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <div
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: isCurrent ? '#4A6741' : isPast ? 'rgba(74,103,65,0.2)' : 'rgba(140,133,120,0.12)',
+                          border: isCurrent ? '2px solid #4A6741' : isPast ? '2px solid rgba(74,103,65,0.4)' : '2px solid rgba(140,133,120,0.2)',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isPast ? (
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 6l3 3 5-5" stroke="#4A6741" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        ) : (
+                          <div
+                            style={{
+                              width: '7px',
+                              height: '7px',
+                              borderRadius: '50%',
+                              background: isCurrent ? 'white' : 'rgba(140,133,120,0.4)',
+                            }}
+                          />
+                        )}
+                      </div>
+                      <span
+                        style={{
+                          fontFamily: 'DM Sans, system-ui, sans-serif',
+                          fontSize: '10px',
+                          fontWeight: isCurrent ? '700' : '400',
+                          color: isCurrent ? '#4A6741' : isPast ? 'rgba(74,103,65,0.7)' : 'rgba(140,133,120,0.6)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {label}
+                      </span>
+                    </div>
+                    {idx < steps.length - 1 && (
+                      <div
+                        style={{
+                          flex: 1,
+                          height: '2px',
+                          background: idx < currentIdx ? 'rgba(74,103,65,0.4)' : 'rgba(140,133,120,0.15)',
+                          marginBottom: '14px',
+                          minWidth: '8px',
+                        }}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })()}
+
+        {/* ────── LIFECYCLE ACTIONS (creator only) ────── */}
+        {isCreator && (
+          <>
+            {trip.status === 'proposed' && (
+              <div
+                style={{
+                  background: 'rgba(74,103,65,0.06)',
+                  border: '1px solid rgba(74,103,65,0.2)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '15px', fontWeight: '700', color: '#4A6741' }}>
+                  Ready to vote?
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    type="datetime-local"
+                    value={deadlineInput}
+                    onChange={(e) => setDeadlineInput(e.target.value)}
+                    style={{
+                      fontFamily: 'DM Sans, system-ui, sans-serif',
+                      fontSize: '13px',
+                      padding: '8px 10px',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: '8px',
+                      background: 'var(--color-base)',
+                      color: 'var(--color-charcoal)',
+                      outline: 'none',
+                    }}
+                    placeholder="Deadline (optional)"
+                  />
+                  <button
+                    onClick={handleOpenVoting}
+                    disabled={openingVoting}
+                    style={{
+                      padding: '9px 20px',
+                      background: openingVoting ? 'rgba(74,103,65,0.5)' : '#4A6741',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: openingVoting ? 'default' : 'pointer',
+                      fontFamily: 'DM Sans, system-ui, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {openingVoting ? 'Opening…' : 'Open voting'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {trip.status === 'confirmed' && (
+              <div
+                style={{
+                  background: 'rgba(74,103,65,0.06)',
+                  border: '1px solid rgba(74,103,65,0.2)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '15px', fontWeight: '700', color: '#4A6741' }}>
+                  Trip confirmed!
+                </div>
+                {departureIsFuture ? (
+                  <>
+                    <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '13px', color: 'var(--color-stone)' }}>
+                      Available on {new Date(trip.dateRange.start).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                    <button
+                      disabled
+                      style={{
+                        alignSelf: 'flex-start',
+                        padding: '9px 20px',
+                        background: 'rgba(74,103,65,0.25)',
+                        color: 'rgba(74,103,65,0.5)',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'not-allowed',
+                        fontFamily: 'DM Sans, system-ui, sans-serif',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                      }}
+                    >
+                      Start trip
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={handleStartTrip}
+                    disabled={startingTrip}
+                    style={{
+                      alignSelf: 'flex-start',
+                      padding: '9px 20px',
+                      background: startingTrip ? 'rgba(74,103,65,0.5)' : '#4A6741',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: startingTrip ? 'default' : 'pointer',
+                      fontFamily: 'DM Sans, system-ui, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                    }}
+                  >
+                    {startingTrip ? 'Starting…' : 'Start trip'}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {trip.status === 'active' && (
+              <div
+                style={{
+                  background: 'rgba(74,103,65,0.06)',
+                  border: '1px solid rgba(74,103,65,0.25)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '15px', fontWeight: '700', color: '#4A6741' }}>
+                  Trip in progress!
+                </div>
+                <button
+                  onClick={handleCompleteTrip}
+                  disabled={completingTrip}
+                  style={{
+                    alignSelf: 'flex-start',
+                    padding: '9px 20px',
+                    background: completingTrip ? 'rgba(74,103,65,0.5)' : '#4A6741',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: completingTrip ? 'default' : 'pointer',
+                    fontFamily: 'DM Sans, system-ui, sans-serif',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  {completingTrip ? 'Completing…' : 'Complete trip'}
+                </button>
+              </div>
+            )}
+
+            {trip.status === 'completed' && (
+              <div
+                style={{
+                  background: 'rgba(140,133,120,0.08)',
+                  border: '1px solid rgba(140,133,120,0.2)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  fontFamily: 'DM Sans, system-ui, sans-serif',
+                  fontSize: '14px',
+                  color: 'var(--color-stone)',
+                  fontWeight: '600',
+                }}
+              >
+                Trip completed — memories made 🏕
+              </div>
+            )}
+          </>
+        )}
+
         {/* ────── PROPOSED / VOTING ────── */}
         {!isConfirmedOrBeyond && (
           <>
-            {/* Destinations list */}
-            {selectedDestinations.length > 0 && (
+            {/* Destinations list — show only when proposed (not yet voting) */}
+            {trip.status === 'proposed' && selectedDestinations.length > 0 && (
               <section>
                 <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '18px', fontWeight: '700', color: 'var(--color-charcoal)', margin: '0 0 12px' }}>
                   Destinations
@@ -590,21 +895,30 @@ export default function TripDetailPage() {
               </div>
             </section>
 
-            {/* Voting placeholder */}
-            <div
-              style={{
-                background: 'rgba(124,92,191,0.06)',
-                border: '1px dashed rgba(124,92,191,0.3)',
-                borderRadius: '12px',
-                padding: '24px',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🗳</div>
-              <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: '#7C5CBF', fontWeight: '600' }}>
-                Voting coming in Stage 5
+            {/* Voting panel (when status is voting) or placeholder */}
+            {trip.status === 'voting' && currentUid ? (
+              <VotingPanel
+                trip={trip}
+                currentUserUid={currentUid}
+                isCreator={isCreator}
+                onTripUpdate={() => {}}
+              />
+            ) : trip.status === 'proposed' ? (
+              <div
+                style={{
+                  background: 'rgba(124,92,191,0.06)',
+                  border: '1px dashed rgba(124,92,191,0.3)',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '28px', marginBottom: '8px' }}>🗳</div>
+                <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: '#7C5CBF', fontWeight: '600' }}>
+                  Voting opens when the creator starts it
+                </div>
               </div>
-            </div>
+            ) : null}
           </>
         )}
 

@@ -1,18 +1,22 @@
+import { lazy, Suspense, useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
+import { initTheme } from './hooks/useTheme'
 import Layout from './components/Layout'
 import Landing from './pages/Landing'
 import Onboarding from './pages/Onboarding'
-import MapPage from './pages/Map'
 import TripsPage from './pages/Trips'
-import TripDetailPage from './pages/TripDetail'
 import CrewPage from './pages/Crew'
 import ProfilePage from './pages/Profile'
+import { NotificationProvider } from './contexts/NotificationContext'
+
+const MapPage = lazy(() => import('./pages/Map'))
+const TripDetailPage = lazy(() => import('./pages/TripDetail'))
 
 function LoadingScreen() {
   return (
     <div
-      className="topo-pattern"
+      className="topo-bg"
       style={{
         minHeight: '100dvh',
         display: 'flex',
@@ -52,22 +56,31 @@ function AppContent() {
 
   return (
     <Layout>
-      <Routes>
-        <Route path="/map" element={<MapPage />} />
-        <Route path="/trips" element={<TripsPage />} />
-        <Route path="/trips/:tripId" element={<TripDetailPage />} />
-        <Route path="/crew" element={<CrewPage />} />
-        <Route path="/profile" element={<ProfilePage profile={profile} />} />
-        <Route path="*" element={<Navigate to="/map" replace />} />
-      </Routes>
+      <Suspense fallback={<div className="topo-bg" style={{ height: '100vh' }} />}>
+        <Routes>
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/trips" element={<TripsPage />} />
+          <Route path="/trips/:tripId" element={<TripDetailPage />} />
+          <Route path="/crew" element={<CrewPage />} />
+          <Route path="/profile" element={<ProfilePage profile={profile} />} />
+          <Route path="*" element={<Navigate to="/map" replace />} />
+        </Routes>
+      </Suspense>
     </Layout>
   )
 }
 
 export default function App() {
+  // Initialise theme before first render to avoid flash of wrong theme
+  useLayoutEffect(() => {
+    initTheme()
+  }, [])
+
   return (
     <BrowserRouter>
-      <AppContent />
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
     </BrowserRouter>
   )
 }

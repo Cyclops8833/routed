@@ -47,10 +47,12 @@ function MemberBar({
   member,
   maxTotal,
   mounted,
+  index,
 }: {
   member: MemberCost
   maxTotal: number
   mounted: boolean
+  index: number
 }) {
   const fuelPct = maxTotal > 0 ? (member.fuelCost / maxTotal) * 100 : 0
   const campPct = maxTotal > 0 ? (member.campsiteCost / maxTotal) * 100 : 0
@@ -68,7 +70,10 @@ function MemberBar({
   })
 
   return (
-    <div style={{ marginBottom: '12px' }}>
+    <div
+      className="card-animate"
+      style={{ marginBottom: '12px', animationDelay: `${index * 60}ms` }}
+    >
       <div
         style={{
           display: 'flex',
@@ -248,12 +253,13 @@ export default function CostBreakdown({
 
       {/* Per-person bars */}
       <div style={{ marginBottom: '16px' }}>
-        {breakdown.members.map((member) => (
+        {breakdown.members.map((member, idx) => (
           <MemberBar
             key={member.uid}
             member={member}
             maxTotal={maxTotal}
             mounted={mounted}
+            index={idx}
           />
         ))}
       </div>

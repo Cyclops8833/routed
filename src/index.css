@@ -1,3 +1,4 @@
+/* font-display:swap is handled by Google Fonts via the &display=swap query param */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
@@ -45,6 +46,7 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -69,6 +71,14 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Fraunces', Georgia, serif;
   line-height: 1.2;
+}
+
+/* ── Topo background class (reusable) ───────────────────────── */
+/* Seamless 400×400 tile of 4 nested irregular elliptic contours */
+.topo-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cellipse cx='200' cy='200' rx='195' ry='155' fill='none' stroke='%234A6741' stroke-width='1' opacity='0.08'/%3E%3Cellipse cx='200' cy='200' rx='155' ry='118' fill='none' stroke='%234A6741' stroke-width='1' opacity='0.08'/%3E%3Cellipse cx='200' cy='200' rx='115' ry='82' fill='none' stroke='%234A6741' stroke-width='1' opacity='0.08'/%3E%3Cellipse cx='200' cy='200' rx='76' ry='50' fill='none' stroke='%234A6741' stroke-width='1' opacity='0.08'/%3E%3Cellipse cx='0' cy='0' rx='195' ry='155' fill='none' stroke='%234A6741' stroke-width='1' opacity='0.08'/%3E%3Cellipse cx='400' cy='0' rx='195' ry='155' fill='none' stroke='%234A6741' stroke-width='1' opacity='0.08'/%3E%3Cellipse cx='0' cy='400' rx='195' ry='155' fill='none' stroke='%234A6741' stroke-width='1' opacity='0.08'/%3E%3Cellipse cx='400' cy='400' rx='195' ry='155' fill='none' stroke='%234A6741' stroke-width='1' opacity='0.08'/%3E%3C/svg%3E");
+  background-size: 400px 400px;
+  background-repeat: repeat;
 }
 
 /* Topo pattern: concentric ellipses repeating as background */
@@ -97,6 +107,22 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 0.05;
 }
 
+/* ── Grain overlay ──────────────────────────────────────────── */
+.grain-overlay {
+  position: relative;
+}
+
+.grain-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='200' height='200' filter='url(%23noise)'/></svg>");
+  background-size: 200px 200px;
+  z-index: 1;
+}
+
 /* Noise overlay using SVG feTurbulence filter */
 .noise-overlay {
   position: relative;
@@ -112,6 +138,17 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
   z-index: 1;
   mix-blend-mode: overlay;
+}
+
+/* ── Staggered card animations ──────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-animate {
+  opacity: 0;
+  animation: fadeSlideUp 0.35s ease-out forwards;
 }
 
 /* Card styles */

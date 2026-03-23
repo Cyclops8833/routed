@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -103,6 +103,9 @@ export default function MapPage() {
   const [isSatellite, setIsSatellite] = useState(false)
   const [sheetMode, setSheetMode] = useState<SheetMode>('closed')
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+  const dragStartY = useRef<number | null>(null)
+  const dragPointerId = useRef<number | null>(null)
+  const [dragDelta, setDragDelta] = useState(0)
 
   // Initialise map
   useEffect(() => {
@@ -215,6 +218,30 @@ export default function MapPage() {
   const handleSheetPeek = () => {
     setSheetMode('peek')
   }
+
+  const handleDragHandlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    dragStartY.current = e.clientY
+    dragPointerId.current = e.pointerId
+    setDragDelta(0)
+    ;(e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId)
+  }, [])
+
+  const handleDragHandlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragStartY.current === null || dragPointerId.current !== e.pointerId) return
+    const delta = e.clientY - dragStartY.current
+    if (delta > 0) setDragDelta(delta)
+  }, [])
+
+  const handleDragHandlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragPointerId.current !== e.pointerId) return
+    const delta = e.clientY - (dragStartY.current ?? e.clientY)
+    dragStartY.current = null
+    dragPointerId.current = null
+    setDragDelta(0)
+    if (delta > 80) {
+      handleSheetClose()
+    }
+  }, [])
 
   const isLoading = !mapLoaded || !crewLoaded
 
@@ -370,8 +397,8 @@ export default function MapPage() {
           background: 'var(--color-surface)',
           borderRadius: sheetMode === 'peek' ? '16px 16px 0 0' : '20px 20px 0 0',
           boxShadow: sheetVisible ? '0 -4px 24px rgba(0,0,0,0.15)' : 'none',
-          transform: sheetVisible ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+          transform: sheetVisible ? `translateY(${dragDelta}px)` : 'translateY(100%)',
+          transition: dragDelta > 0 ? 'none' : 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)',
           overflow: 'hidden',
           cursor: sheetMode === 'peek' ? 'pointer' : 'default',
         }}
@@ -382,6 +409,9 @@ export default function MapPage() {
             currentUser={currentUser}
             onClose={handleSheetClose}
             onPeek={handleSheetPeek}
+            onDragHandlePointerDown={handleDragHandlePointerDown}
+            onDragHandlePointerMove={handleDragHandlePointerMove}
+            onDragHandlePointerUp={handleDragHandlePointerUp}
           />
         )}
       </div>

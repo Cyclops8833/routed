@@ -23,6 +23,12 @@ export interface UserProfile {
   onboardingComplete: boolean
 }
 
+export interface Vote {
+  uid: string
+  destinationId: string
+  votedAt: Date
+}
+
 export interface Trip {
   id: string
   name: string
@@ -35,6 +41,8 @@ export interface Trip {
   status: 'proposed' | 'voting' | 'confirmed' | 'active' | 'completed'
   createdAt: Date
   confirmedDestinationId?: string
+  votingDeadline?: string
+  votes?: Vote[]
   costConfig?: {
     fuelPrices: { petrol: number; diesel: number }
     dailyFoodRate: number

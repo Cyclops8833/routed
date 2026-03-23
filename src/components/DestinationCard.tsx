@@ -154,18 +154,11 @@ export default function DestinationCard({
     borderLeft: isTopRanked ? '4px solid #C4893B' : '1px solid var(--color-border)',
     opacity: overBudget ? 0.6 : 1,
     overflow: 'hidden',
-    animation: `fadeInCard 0.3s ease both`,
     animationDelay: `${index * 50}ms`,
   }
 
   return (
-    <div style={cardStyle}>
-      <style>{`
-        @keyframes fadeInCard {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+    <div className="card-animate" style={cardStyle}>
 
       <div style={{ padding: '16px' }}>
         {/* Header row */}

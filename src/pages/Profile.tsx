@@ -3,6 +3,7 @@ import { signOut } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { UserProfile, Vehicle, HomeLocation } from '../types'
+import { useTheme } from '../hooks/useTheme'
 
 interface ProfilePageProps {
   profile: UserProfile
@@ -52,6 +53,7 @@ function VehicleTypeIcon({ type }: { type: VehicleType }) {
 }
 
 export default function ProfilePage({ profile }: ProfilePageProps) {
+  const { theme, toggle: toggleTheme } = useTheme()
   const [displayName, setDisplayName] = useState(profile.displayName)
   const [suburb, setSuburb] = useState(profile.homeLocation?.suburb ?? '')
   const [geocodeResult, setGeocodeResult] = useState<HomeLocation | null>(profile.homeLocation ?? null)
@@ -544,6 +546,77 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
           ) : null}
           {saving ? 'Saving…' : 'Save changes'}
         </button>
+
+        {/* Dark mode toggle */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '14px 16px',
+            borderRadius: '12px',
+            border: '1px solid var(--color-border)',
+            background: 'var(--color-surface)',
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontFamily: 'DM Sans, system-ui, sans-serif',
+                fontSize: '15px',
+                fontWeight: '600',
+                color: 'var(--color-charcoal)',
+              }}
+            >
+              {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+            </div>
+            <div
+              style={{
+                fontFamily: 'DM Sans, system-ui, sans-serif',
+                fontSize: '13px',
+                color: 'var(--color-stone)',
+                marginTop: '2px',
+              }}
+            >
+              {theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            </div>
+          </div>
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle dark mode"
+            style={{
+              width: '52px',
+              height: '28px',
+              borderRadius: '100px',
+              border: 'none',
+              cursor: 'pointer',
+              background: theme === 'dark' ? 'var(--color-moss)' : 'var(--color-border)',
+              position: 'relative',
+              transition: 'background 0.2s ease',
+              flexShrink: 0,
+            }}
+          >
+            <span
+              style={{
+                position: 'absolute',
+                top: '3px',
+                left: theme === 'dark' ? '26px' : '3px',
+                width: '22px',
+                height: '22px',
+                borderRadius: '50%',
+                background: 'white',
+                transition: 'left 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+              }}
+            >
+              {theme === 'dark' ? '🌙' : '☀️'}
+            </span>
+          </button>
+        </div>
 
         {/* Sign out */}
         <div style={{ paddingTop: '8px' }}>

@@ -293,7 +293,11 @@ export default function CrewPage() {
             <p>No crew members yet.</p>
           </div>
         ) : (
-          members.map((member) => <CrewCard key={member.uid} member={member} />)
+          members.map((member, memberIdx) => (
+            <div key={member.uid} className="card-animate" style={{ animationDelay: `${memberIdx * 40}ms` }}>
+              <CrewCard member={member} />
+            </div>
+          ))
         )}
       </div>
     </div>
