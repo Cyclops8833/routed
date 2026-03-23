@@ -15,11 +15,7 @@ function getInitialTheme(): Theme {
 }
 
 function applyTheme(theme: Theme) {
-  if (theme === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark')
-  } else {
-    document.documentElement.removeAttribute('data-theme')
-  }
+  document.documentElement.setAttribute('data-theme', theme)
   try {
     localStorage.setItem(STORAGE_KEY, theme)
   } catch {
