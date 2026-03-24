@@ -19,7 +19,7 @@ import { calculateCosts } from '../utils/costEngine'
 import type { CostLineItem, FuelPrices, CostBreakdown as CostBreakdownData } from '../utils/costEngine'
 import CostBreakdown from '../components/CostBreakdown'
 import VotingPanel from '../components/VotingPanel'
-import { openVoting, startTrip, completeTrip } from '../utils/tripActions'
+import { openVoting, startTrip, completeTrip, cancelTrip, reopenVoting } from '../utils/tripActions'
 import { getDocs, query, where } from 'firebase/firestore'
 
 // ────────────────────────────────────────────────────────────
@@ -55,6 +55,7 @@ const STATUS_CONFIG: Record<
   confirmed: { label: 'Confirmed', bg: 'rgba(74,103,65,0.12)', color: '#4A6741' },
   active: { label: 'Active', bg: 'rgba(74,103,65,0.18)', color: '#4A6741' },
   completed: { label: 'Completed', bg: 'rgba(140,133,120,0.15)', color: '#8C8578' },
+  cancelled: { label: 'Cancelled', bg: 'rgba(224,122,95,0.12)', color: '#C0614A' },
 }
 
 function formatDateRange(dateRange: { start: string; end: string }): string {
@@ -155,6 +156,10 @@ export default function TripDetailPage() {
   const [openingVoting, setOpeningVoting] = useState(false)
   const [startingTrip, setStartingTrip] = useState(false)
   const [completingTrip, setCompletingTrip] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [reopeningVoting, setReopeningVoting] = useState(false)
 
   // ── Auth ──
   useEffect(() => {
@@ -433,7 +438,7 @@ export default function TripDetailPage() {
 
   const statusCfg = STATUS_CONFIG[trip.status] ?? STATUS_CONFIG.proposed
   const isCreator = currentUid === trip.creatorUid
-  const isConfirmedOrBeyond = ['confirmed', 'active', 'completed'].includes(trip.status)
+  const isConfirmedOrBeyond = ['confirmed', 'active', 'completed', 'cancelled'].includes(trip.status)
   const isEditable = ['confirmed', 'active'].includes(trip.status)
   const countdown = countdownText(trip.dateRange.start)
 
@@ -465,6 +470,29 @@ export default function TripDetailPage() {
       await completeTrip(tripId)
     } finally {
       setCompletingTrip(false)
+    }
+  }
+
+  async function handleCancelTrip() {
+    if (!tripId) return
+    setCancelling(true)
+    try {
+      await cancelTrip(tripId)
+      setShowCancelConfirm(false)
+      setMenuOpen(false)
+    } finally {
+      setCancelling(false)
+    }
+  }
+
+  async function handleReopenVoting() {
+    if (!tripId) return
+    setReopeningVoting(true)
+    try {
+      await reopenVoting(tripId)
+      setMenuOpen(false)
+    } finally {
+      setReopeningVoting(false)
     }
   }
 
@@ -514,11 +542,207 @@ export default function TripDetailPage() {
             fontFamily: 'DM Sans, system-ui, sans-serif',
             fontSize: '14px',
             color: 'var(--color-stone)',
+            flex: 1,
           }}
         >
           Trips
         </span>
+
+        {/* Creator overflow menu */}
+        {isCreator && trip.status !== 'completed' && trip.status !== 'cancelled' && (
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px 8px',
+                color: 'var(--color-stone)',
+                display: 'flex',
+                alignItems: 'center',
+                borderRadius: '8px',
+              }}
+              aria-label="Trip options"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="19" cy="12" r="2" />
+              </svg>
+            </button>
+
+            {menuOpen && (
+              <>
+                {/* Backdrop */}
+                <div
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 200,
+                  }}
+                />
+                {/* Menu */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '4px',
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    zIndex: 201,
+                    minWidth: '180px',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Reopen voting — for confirmed status */}
+                  {trip.status === 'confirmed' && (
+                    <button
+                      onClick={handleReopenVoting}
+                      disabled={reopeningVoting}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '14px 16px',
+                        textAlign: 'left',
+                        background: 'none',
+                        border: 'none',
+                        borderBottom: '1px solid var(--color-border)',
+                        cursor: 'pointer',
+                        fontFamily: 'DM Sans, system-ui, sans-serif',
+                        fontSize: '14px',
+                        color: 'var(--color-charcoal)',
+                      }}
+                    >
+                      {reopeningVoting ? 'Reopening…' : '🗳 Reopen voting'}
+                    </button>
+                  )}
+
+                  {/* Mark as completed — for confirmed or active */}
+                  {(trip.status === 'confirmed' || trip.status === 'active') && (
+                    <button
+                      onClick={() => { handleCompleteTrip(); setMenuOpen(false) }}
+                      disabled={completingTrip}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '14px 16px',
+                        textAlign: 'left',
+                        background: 'none',
+                        border: 'none',
+                        borderBottom: '1px solid var(--color-border)',
+                        cursor: 'pointer',
+                        fontFamily: 'DM Sans, system-ui, sans-serif',
+                        fontSize: '14px',
+                        color: 'var(--color-charcoal)',
+                      }}
+                    >
+                      {completingTrip ? 'Completing…' : '✅ Mark as completed'}
+                    </button>
+                  )}
+
+                  {/* Cancel trip */}
+                  <button
+                    onClick={() => { setShowCancelConfirm(true); setMenuOpen(false) }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      padding: '14px 16px',
+                      textAlign: 'left',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: 'DM Sans, system-ui, sans-serif',
+                      fontSize: '14px',
+                      color: '#C0614A',
+                    }}
+                  >
+                    🚫 Cancel trip
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Cancel confirmation dialog */}
+      {showCancelConfirm && (
+        <>
+          <div
+            onClick={() => setShowCancelConfirm(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.4)',
+              zIndex: 300,
+            }}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: 'var(--color-surface)',
+              borderRadius: '20px 20px 0 0',
+              padding: '24px 20px calc(24px + env(safe-area-inset-bottom))',
+              zIndex: 301,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}
+          >
+            <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '20px', fontWeight: '700', color: 'var(--color-charcoal)' }}>
+              Cancel this trip?
+            </div>
+            <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: 'var(--color-stone)', lineHeight: 1.5 }}>
+              This will mark the trip as cancelled. The crew will still be able to view it in their past trips.
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '13px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--color-border)',
+                  background: 'var(--color-base)',
+                  color: 'var(--color-charcoal)',
+                  fontFamily: 'DM Sans, system-ui, sans-serif',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Keep it
+              </button>
+              <button
+                onClick={handleCancelTrip}
+                disabled={cancelling}
+                style={{
+                  flex: 1,
+                  padding: '13px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: cancelling ? 'rgba(192,97,74,0.5)' : '#C0614A',
+                  color: 'white',
+                  fontFamily: 'DM Sans, system-ui, sans-serif',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: cancelling ? 'default' : 'pointer',
+                }}
+              >
+                {cancelling ? 'Cancelling…' : 'Yes, cancel trip'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       <div style={{ padding: '16px 20px 40px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
@@ -584,7 +808,22 @@ export default function TripDetailPage() {
         </div>
 
         {/* ────── STATUS STEPPER ────── */}
-        {(() => {
+        {trip.status === 'cancelled' ? (
+          <div
+            style={{
+              background: 'rgba(192,97,74,0.08)',
+              border: '1px solid rgba(192,97,74,0.2)',
+              borderRadius: '12px',
+              padding: '14px 16px',
+              fontFamily: 'DM Sans, system-ui, sans-serif',
+              fontSize: '14px',
+              color: '#C0614A',
+              fontWeight: '500',
+            }}
+          >
+            🚫 This trip was cancelled.
+          </div>
+        ) : (() => {
           const steps: Trip['status'][] = ['proposed', 'voting', 'confirmed', 'active', 'completed']
           const currentIdx = steps.indexOf(trip.status)
           return (

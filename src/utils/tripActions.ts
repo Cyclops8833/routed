@@ -33,3 +33,18 @@ export async function completeTrip(tripId: string): Promise<void> {
     completedAt: Timestamp.now(),
   })
 }
+
+export async function cancelTrip(tripId: string): Promise<void> {
+  await updateDoc(doc(db, 'trips', tripId), {
+    status: 'cancelled',
+    cancelledAt: Timestamp.now(),
+  })
+}
+
+export async function reopenVoting(tripId: string): Promise<void> {
+  await updateDoc(doc(db, 'trips', tripId), {
+    status: 'voting',
+    confirmedDestinationId: null,
+    votingDeadline: null,
+  })
+}
