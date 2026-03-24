@@ -1,4 +1,4 @@
-import { doc, updateDoc, Timestamp } from 'firebase/firestore'
+import { doc, updateDoc, deleteDoc, collection, getDocs, Timestamp } from 'firebase/firestore'
 import { db } from '../firebase'
 
 export async function openVoting(tripId: string, deadline?: Date): Promise<void> {
@@ -35,10 +35,12 @@ export async function completeTrip(tripId: string): Promise<void> {
 }
 
 export async function cancelTrip(tripId: string): Promise<void> {
-  await updateDoc(doc(db, 'trips', tripId), {
-    status: 'cancelled',
-    cancelledAt: Timestamp.now(),
-  })
+  // Delete subcollections first (Firestore doesn't cascade-delete)
+  for (const sub of ['checklist', 'comments', 'votes']) {
+    const snap = await getDocs(collection(db, 'trips', tripId, sub))
+    await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)))
+  }
+  await deleteDoc(doc(db, 'trips', tripId))
 }
 
 export async function reopenVoting(tripId: string): Promise<void> {

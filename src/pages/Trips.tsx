@@ -96,7 +96,7 @@ export default function TripsPage() {
   const upcomingTrips = trips.filter((t) =>
     ['proposed', 'voting', 'confirmed', 'active'].includes(t.status)
   )
-  const pastTrips = trips.filter((t) => t.status === 'completed' || t.status === 'cancelled')
+  const pastTrips = trips.filter((t) => t.status === 'completed')
   const displayedTrips = activeTab === 'upcoming' ? upcomingTrips : pastTrips
 
 
@@ -263,14 +263,13 @@ export default function TripsPage() {
             >
               {activeTab === 'upcoming'
                 ? 'No upcoming trips. Hit the + on the map to plan one.'
-                : 'No past trips yet.'}
+                : 'No completed trips yet.'}
             </p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {displayedTrips.map((trip, tripIdx) => {
               const isCompleted = trip.status === 'completed'
-              const isCancelled = trip.status === 'cancelled'
               const isActive = trip.status === 'active'
 
               // Status-specific badge content
@@ -303,17 +302,17 @@ export default function TripsPage() {
                   onClick={() => navigate(`/trips/${trip.id}`)}
                   style={{
                     animationDelay: `${tripIdx * 40}ms`,
-                    background: (isCompleted || isCancelled) ? 'rgba(140,133,120,0.05)' : 'var(--color-surface)',
+                    background: isCompleted ? 'rgba(140,133,120,0.05)' : 'var(--color-surface)',
                     borderRadius: '14px',
-                    border: (isCompleted || isCancelled)
+                    border: isCompleted
                       ? '1px solid rgba(140,133,120,0.2)'
                       : isActive
                       ? '1.5px solid rgba(74,103,65,0.4)'
                       : '1px solid var(--color-border)',
-                    boxShadow: (isCompleted || isCancelled) ? 'none' : '0 2px 8px rgba(0,0,0,0.06)',
+                    boxShadow: isCompleted ? 'none' : '0 2px 8px rgba(0,0,0,0.06)',
                     padding: '16px',
                     cursor: 'pointer',
-                    opacity: (isCompleted || isCancelled) ? 0.7 : 1,
+                    opacity: isCompleted ? 0.7 : 1,
                   }}
                 >
                   <div
@@ -330,7 +329,7 @@ export default function TripsPage() {
                         fontFamily: 'Fraunces, Georgia, serif',
                         fontSize: '17px',
                         fontWeight: '700',
-                        color: (isCompleted || isCancelled) ? 'var(--color-stone)' : 'var(--color-charcoal)',
+                        color: isCompleted ? 'var(--color-stone)' : 'var(--color-charcoal)',
                         margin: 0,
                         flex: 1,
                       }}
@@ -368,18 +367,14 @@ export default function TripsPage() {
                           fontWeight: '600',
                           borderRadius: '100px',
                           padding: '3px 9px',
-                          backgroundColor: isCancelled
-                            ? 'rgba(224,122,95,0.1)'
-                            : isCompleted
+                          backgroundColor: isCompleted
                             ? 'rgba(140,133,120,0.1)'
                             : trip.status === 'voting'
                             ? 'rgba(124,92,191,0.12)'
                             : trip.status === 'confirmed'
                             ? 'rgba(74,103,65,0.12)'
                             : 'rgba(196,137,59,0.12)',
-                          color: isCancelled
-                            ? '#C0614A'
-                            : isCompleted
+                          color: isCompleted
                             ? 'var(--color-stone)'
                             : trip.status === 'voting'
                             ? '#7C5CBF'
@@ -397,8 +392,6 @@ export default function TripsPage() {
                           ? 'Voting'
                           : trip.status === 'confirmed'
                           ? 'Confirmed'
-                          : trip.status === 'cancelled'
-                          ? 'Cancelled'
                           : 'Completed'}
                       </span>
                     )}

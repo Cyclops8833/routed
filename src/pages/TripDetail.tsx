@@ -55,7 +55,6 @@ const STATUS_CONFIG: Record<
   confirmed: { label: 'Confirmed', bg: 'rgba(74,103,65,0.12)', color: '#4A6741' },
   active: { label: 'Active', bg: 'rgba(74,103,65,0.18)', color: '#4A6741' },
   completed: { label: 'Completed', bg: 'rgba(140,133,120,0.15)', color: '#8C8578' },
-  cancelled: { label: 'Cancelled', bg: 'rgba(224,122,95,0.12)', color: '#C0614A' },
 }
 
 function formatDateRange(dateRange: { start: string; end: string }): string {
@@ -438,7 +437,7 @@ export default function TripDetailPage() {
 
   const statusCfg = STATUS_CONFIG[trip.status] ?? STATUS_CONFIG.proposed
   const isCreator = currentUid === trip.creatorUid
-  const isConfirmedOrBeyond = ['confirmed', 'active', 'completed', 'cancelled'].includes(trip.status)
+  const isConfirmedOrBeyond = ['confirmed', 'active', 'completed'].includes(trip.status)
   const isEditable = ['confirmed', 'active'].includes(trip.status)
   const countdown = countdownText(trip.dateRange.start)
 
@@ -478,8 +477,7 @@ export default function TripDetailPage() {
     setCancelling(true)
     try {
       await cancelTrip(tripId)
-      setShowCancelConfirm(false)
-      setMenuOpen(false)
+      navigate('/trips')
     } finally {
       setCancelling(false)
     }
@@ -549,7 +547,7 @@ export default function TripDetailPage() {
         </span>
 
         {/* Creator overflow menu */}
-        {isCreator && trip.status !== 'completed' && trip.status !== 'cancelled' && (
+        {isCreator && trip.status !== 'completed' && (
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setMenuOpen((v) => !v)}
@@ -698,10 +696,10 @@ export default function TripDetailPage() {
             }}
           >
             <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '20px', fontWeight: '700', color: 'var(--color-charcoal)' }}>
-              Cancel this trip?
+              Cancel {trip.name || 'this trip'}?
             </div>
             <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: 'var(--color-stone)', lineHeight: 1.5 }}>
-              This will mark the trip as cancelled. The crew will still be able to view it in their past trips.
+              This can't be undone.
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
@@ -808,22 +806,7 @@ export default function TripDetailPage() {
         </div>
 
         {/* ────── STATUS STEPPER ────── */}
-        {trip.status === 'cancelled' ? (
-          <div
-            style={{
-              background: 'rgba(192,97,74,0.08)',
-              border: '1px solid rgba(192,97,74,0.2)',
-              borderRadius: '12px',
-              padding: '14px 16px',
-              fontFamily: 'DM Sans, system-ui, sans-serif',
-              fontSize: '14px',
-              color: '#C0614A',
-              fontWeight: '500',
-            }}
-          >
-            🚫 This trip was cancelled.
-          </div>
-        ) : (() => {
+        {(() => {
           const steps: Trip['status'][] = ['proposed', 'voting', 'confirmed', 'active', 'completed']
           const currentIdx = steps.indexOf(trip.status)
           return (

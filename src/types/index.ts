@@ -56,7 +56,7 @@ export interface Trip {
   creatorUid: string
   attendees: string[]
   selectedDestinationIds: string[]
-  status: 'proposed' | 'voting' | 'confirmed' | 'active' | 'completed' | 'cancelled'
+  status: 'proposed' | 'voting' | 'confirmed' | 'active' | 'completed'
   createdAt: Date
   confirmedDestinationId?: string
   votingDeadline?: string
