@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, getDocs, query, where, onSnapshot } from 'firebase/firestore'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -212,6 +212,9 @@ export default function MapPage() {
   const [coachMarkVisible, setCoachMarkVisible] = useState(!localStorage.getItem(FAB_SEEN_KEY))
   const [spotlightDests, setSpotlightDests] = useState<Destination[]>([])
   const coachMarkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // For popup shortlist + member data — stored in refs so popup closures always read latest
+  const shortlistsRef = useRef<Array<{ memberUid: string; destinationId: string }>>([])
+  const crewMembersRef = useRef<UserProfile[]>([])
   const [welcomeVisible, setWelcomeVisible] = useState(!localStorage.getItem(WELCOME_SEEN_KEY))
   const [welcomeFading, setWelcomeFading] = useState(false)
 
@@ -267,7 +270,16 @@ export default function MapPage() {
 
     map.on('load', () => {
       // Add destination dots BEFORE crew pins
-      addDestinationDots(map, mapboxgl.Popup)
+      addDestinationDots(map, mapboxgl.Popup, {
+        getShortlists: () => shortlistsRef.current,
+        getMembers: () => crewMembersRef.current,
+        onPlanTrip: (destinationId) => {
+          // Store pre-selected destination and open Quick Plan
+          localStorage.setItem('routed-preselect-destination', destinationId)
+          setSheetMode('full')
+          setPlanMode('quick')
+        },
+      })
       setMapLoaded(true)
     })
 
@@ -278,6 +290,18 @@ export default function MapPage() {
       mapRef.current = null
     }
   }, [])
+
+  // Subscribe to shortlists so popup always has fresh data
+  useEffect(() => {
+    if (!currentUid) return
+    const unsub = onSnapshot(collection(db, 'shortlists'), (snap) => {
+      shortlistsRef.current = snap.docs.map((d) => {
+        const data = d.data()
+        return { memberUid: data.memberUid as string, destinationId: data.destinationId as string }
+      })
+    })
+    return unsub
+  }, [currentUid])
 
   // Load crew and place markers once map is loaded
   useEffect(() => {
@@ -292,6 +316,9 @@ export default function MapPage() {
         const profiles = snap.docs
           .map((d) => d.data() as UserProfile)
           .sort((a, b) => a.uid.localeCompare(b.uid))
+
+        // Store for popup use
+        crewMembersRef.current = profiles
 
         const membersWithLocation = profiles.filter(
           (p) => p.homeLocation && typeof p.homeLocation.lat === 'number' && typeof p.homeLocation.lng === 'number'

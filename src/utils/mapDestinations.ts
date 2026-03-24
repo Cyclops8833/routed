@@ -1,11 +1,21 @@
 import type mapboxgl from 'mapbox-gl'
 import { destinations } from '../data/destinations'
+import type { UserProfile } from '../types'
 
 const SHORTLIST_RING_LAYER = 'destinations-shortlist-ring'
 
 const SOURCE_ID = 'destinations-source'
 const DOTS_LAYER = 'destinations-dots'
 const HOVER_LAYER = 'destinations-dots-hover'
+
+export interface DestinationDotsOptions {
+  /** Returns the latest shortlist entries — called at popup-open time */
+  getShortlists?: () => Array<{ memberUid: string; destinationId: string }>
+  /** Returns the latest crew member profiles — called at popup-open time */
+  getMembers?: () => UserProfile[]
+  /** Called when "Plan a trip here" is tapped */
+  onPlanTrip?: (destinationId: string) => void
+}
 
 function getActivityIcons(activities: string[]): string {
   const icons: string[] = []
@@ -16,8 +26,106 @@ function getActivityIcons(activities: string[]): string {
   return icons.join(' ')
 }
 
+function getRoadLabel(roadType: string): string {
+  if (roadType === '4wd-only') return '🚙 4WD Only'
+  if (roadType === 'unsealed') return '🪨 Unsealed'
+  return '🛣 Sealed'
+}
+
+function firstSentence(text: string): string {
+  const match = text.match(/^[^.!?]*[.!?]/)
+  return match ? match[0] : text.slice(0, 120) + (text.length > 120 ? '…' : '')
+}
+
+function avatarHtml(initial: string, colour: string): string {
+  return `<div style="width:20px;height:20px;border-radius:50%;background:${colour};color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${initial}</div>`
+}
+
+const MEMBER_COLOURS = ['#4A6741','#C4893B','#B85C38','#7C5CBF','#E07A5F','#5B8DB8','#8B6E47','#3D8B6E']
+
+function buildPopupHtml(
+  destId: string,
+  shortlists: Array<{ memberUid: string; destinationId: string }>,
+  members: UserProfile[]
+): string {
+  const dest = destinations.find((d) => d.id === destId)
+  if (!dest) return `<div>Unknown destination</div>`
+
+  const cost = dest.campsiteCostPerNight === 0
+    ? `<span style="color:#4A6741;font-weight:600;">Free</span>`
+    : `<span style="color:#8C8578;">$${dest.campsiteCostPerNight}/night</span>`
+
+  const roadLabel = getRoadLabel(dest.roadType)
+  const activityIcons = getActivityIcons(dest.activities)
+
+  const bookingBadge = dest.bookingInfo.requiresBooking
+    ? `<span style="font-size:10px;font-weight:600;color:#C4893B;background:rgba(196,137,59,0.1);border:1px solid rgba(196,137,59,0.3);border-radius:100px;padding:2px 8px;">📅 Booking required</span>`
+    : `<span style="font-size:10px;font-weight:600;color:#4A6741;background:rgba(74,103,65,0.08);border:1px solid rgba(74,103,65,0.25);border-radius:100px;padding:2px 8px;">✓ No booking needed</span>`
+
+  // Fish species
+  const fishHtml = dest.fishSpecies && dest.fishSpecies.length > 0
+    ? `<div style="font-size:11px;color:#8C8578;margin-top:4px;">🎣 ${dest.fishSpecies.join(', ')}</div>`
+    : ''
+
+  // Crew interest (shortlists for this destination)
+  const destShortlists = shortlists.filter((s) => s.destinationId === destId)
+  let crewInterestHtml = ''
+  if (destShortlists.length > 0) {
+    const sortedMembers = [...members].sort((a, b) => a.uid.localeCompare(b.uid))
+    const avatars = destShortlists.slice(0, 4).map((s) => {
+      const idx = sortedMembers.findIndex((m) => m.uid === s.memberUid)
+      const member = sortedMembers[idx]
+      const colour = MEMBER_COLOURS[idx % MEMBER_COLOURS.length] ?? '#4A6741'
+      const initial = (member?.displayName ?? '?')[0].toUpperCase()
+      return avatarHtml(initial, colour)
+    }).join('')
+    const extra = destShortlists.length > 4 ? `<span style="font-size:10px;color:#8C8578;">+${destShortlists.length - 4}</span>` : ''
+    const names = destShortlists.slice(0, 2).map((s) => {
+      const m = members.find((x) => x.uid === s.memberUid)
+      return m?.displayName?.split(' ')[0] ?? 'Someone'
+    })
+    const label = destShortlists.length === 1
+      ? `${names[0]} is keen`
+      : destShortlists.length <= 2
+        ? `${names.join(' & ')} are keen`
+        : `${destShortlists.length} crew keen`
+    crewInterestHtml = `
+      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+        <div style="display:flex;gap:3px;">${avatars}${extra}</div>
+        <span style="font-size:11px;color:#8C8578;">${label}</span>
+      </div>`
+  }
+
+  // Crew notes
+  const notesHtml = dest.crewNotes
+    ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(140,133,120,0.2);font-size:11px;color:#8C8578;font-style:italic;line-height:1.5;">${dest.crewNotes}</div>`
+    : ''
+
+  return `
+    <div style="font-family:'DM Sans',system-ui,sans-serif;width:300px;max-width:90vw;">
+      <div style="font-family:'Fraunces',Georgia,serif;font-size:17px;font-weight:700;color:#2D2D2D;margin-bottom:6px;line-height:1.2;">${dest.name}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+        <span style="font-size:11px;font-weight:600;background:rgba(74,103,65,0.1);color:#4A6741;border-radius:100px;padding:2px 8px;">${dest.region}</span>
+        ${bookingBadge}
+      </div>
+      <div style="font-size:12px;color:#4A4A44;line-height:1.5;margin-bottom:8px;">${firstSentence(dest.description)}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8C8578;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+        <span>⛺ ${cost}</span>
+        <span>${roadLabel}</span>
+        ${activityIcons ? `<span>${activityIcons}</span>` : ''}
+      </div>
+      ${fishHtml}
+      ${crewInterestHtml}
+      ${notesHtml}
+      <button
+        onclick="window.__routedPlanTrip && window.__routedPlanTrip('${destId}')"
+        style="margin-top:12px;width:100%;padding:10px;background:#4A6741;color:#FAFAF7;border:none;border-radius:10px;font-family:'DM Sans',system-ui,sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.01em;"
+      >Plan a trip here →</button>
+    </div>`
+}
+
 /** Add all destination dots as a GeoJSON source + circle layers to the map */
-export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Popup): void {
+export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Popup, options?: DestinationDotsOptions): void {
   if (map.getSource(SOURCE_ID)) return
 
   const geojson: GeoJSON.FeatureCollection = {
@@ -88,43 +196,20 @@ export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Pop
     }
   })
 
+  // Register global plan-trip callback so the popup button can reach React
+  if (options?.onPlanTrip) {
+    ;(window as Window & { __routedPlanTrip?: (id: string) => void }).__routedPlanTrip = options.onPlanTrip
+  }
+
   map.on('click', DOTS_LAYER, (e) => {
     const features = e.features
     if (!features || features.length === 0) return
     const props = features[0].properties
     if (!props) return
 
-    const costText =
-      props.campsiteCostPerNight === 0
-        ? 'Free'
-        : `$${props.campsiteCostPerNight}/night`
-
-    const activityIcons = getActivityIcons(
-      String(props.activities ?? '').split(',').filter(Boolean)
-    )
-
-    // Look up booking info from full destination data
-    const destData = destinations.find((d) => d.id === props.id)
-    const requiresBooking = destData?.bookingInfo?.requiresBooking ?? false
-    const bookingBadge = requiresBooking
-      ? `<div style="font-size:11px; font-weight:600; color:#C4893B; background:rgba(196,137,59,0.1); border:1px solid rgba(196,137,59,0.3); border-radius:100px; padding:2px 8px; display:inline-block; margin-bottom:4px;">📅 Booking required</div>`
-      : `<div style="font-size:11px; font-weight:600; color:#4A6741; background:rgba(74,103,65,0.08); border:1px solid rgba(74,103,65,0.25); border-radius:100px; padding:2px 8px; display:inline-block; margin-bottom:4px;">✓ First in, first served</div>`
-
-    const html = `
-      <div style="font-family: DM Sans, system-ui, sans-serif; min-width: 180px;">
-        <div style="font-family: Fraunces, Georgia, serif; font-size:15px; font-weight:700; color:#2D2D2D; margin-bottom:6px;">
-          ${props.name}
-        </div>
-        <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-          <span style="font-size:11px; font-weight:600; background:rgba(74,103,65,0.1); color:#4A6741; border-radius:100px; padding:2px 8px;">
-            ${props.region}
-          </span>
-        </div>
-        ${bookingBadge}
-        <div style="font-size:12px; color:#8C8578; margin-bottom:4px;">⛺ ${costText}</div>
-        ${activityIcons ? `<div style="font-size:14px; margin-top:4px;">${activityIcons}</div>` : ''}
-      </div>
-    `
+    const shortlists = options?.getShortlists?.() ?? []
+    const members = options?.getMembers?.() ?? []
+    const html = buildPopupHtml(String(props.id), shortlists, members)
 
     if (popup) popup.remove()
 
@@ -132,7 +217,7 @@ export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Pop
     if (geometry.type !== 'Point') return
     const coords = geometry.coordinates as [number, number]
 
-    popup = new Popup({ offset: 12, maxWidth: '240px' })
+    popup = new Popup({ offset: 14, maxWidth: '360px' })
       .setLngLat(coords)
       .setHTML(html)
       .addTo(map)
