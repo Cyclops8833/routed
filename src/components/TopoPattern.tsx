@@ -1,19 +1,25 @@
+import { useId } from 'react'
+
 export default function TopoPattern({ className = '' }: { className?: string }) {
+  const uid = useId().replace(/:/g, '')
+  const filterId = `topo-turbulence-${uid}`
+
   return (
     <svg
       className={`topo-pattern ${className}`}
       xmlns="http://www.w3.org/2000/svg"
-      width="800" height="800"
+      viewBox="0 0 800 800"
+      preserveAspectRatio="xMidYMid slice"
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
       aria-hidden="true"
     >
       <defs>
-        <filter id="topo-turbulence">
+        <filter id={filterId}>
           <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" seed="42" result="noise"/>
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
       </defs>
-      <g filter="url(#topo-turbulence)" className="topo-lines">
+      <g filter={`url(#${filterId})`} className="topo-lines">
         <path d="M 400 60 C 600 40, 760 180, 740 400 C 720 580, 580 740, 400 730 C 220 720, 50 580, 60 400 C 70 220, 200 80, 400 60 Z" fill="none" strokeWidth="0.6" className="topo-line" opacity="0.03"/>
         <path d="M 400 100 C 580 85, 710 200, 700 400 C 690 570, 560 700, 400 690 C 240 680, 100 560, 105 400 C 110 240, 230 115, 400 100 Z" fill="none" strokeWidth="0.8" className="topo-line" opacity="0.04"/>
         <path d="M 400 145 C 555 130, 660 230, 655 400 C 650 555, 540 655, 400 648 C 262 641, 148 542, 150 400 C 152 260, 252 158, 400 145 Z" fill="none" strokeWidth="0.9" className="topo-line" opacity="0.045"/>
