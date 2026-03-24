@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import type { RefObject } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
 import { db } from '../firebase'
-import type { UserProfile } from '../types'
+import type { UserProfile, DriveCache } from '../types'
 import { rankDestinations } from '../utils/rankDestinations'
 import type { RankedDestination } from '../utils/rankDestinations'
 import DestinationCard from './DestinationCard'
@@ -318,6 +318,8 @@ export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDrag
             selectedDestIds={selectedDestIds}
             onToggleSelect={toggleDestSelect}
             onViewOnMap={onPeek}
+            currentUserUid={currentUser?.uid}
+            currentUserDriveCache={currentUser?.driveCache ?? null}
           />
         )}
       </div>
@@ -803,6 +805,8 @@ interface ResultsViewProps {
   selectedDestIds: Set<string>
   onToggleSelect: (id: string) => void
   onViewOnMap: () => void
+  currentUserUid?: string
+  currentUserDriveCache?: DriveCache | null
 }
 
 function ResultsView({
@@ -813,6 +817,8 @@ function ResultsView({
   selectedDestIds,
   onToggleSelect,
   onViewOnMap,
+  currentUserUid,
+  currentUserDriveCache,
 }: ResultsViewProps) {
   if (ranking.length === 0) {
     return (
@@ -862,6 +868,8 @@ function ResultsView({
             attendees={attendees}
             attendeeColours={attendeeColours}
             onViewOnMap={onViewOnMap}
+            currentUserUid={currentUserUid}
+            currentUserDriveCache={currentUserDriveCache}
           />
         ))}
       </div>

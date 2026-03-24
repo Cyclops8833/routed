@@ -12,6 +12,14 @@ export interface HomeLocation {
   lng: number
 }
 
+export interface DriveCacheEntry {
+  durationMinutes: number
+  distanceKm: number
+  cachedAt: number
+}
+
+export type DriveCache = Record<string, DriveCacheEntry>
+
 export interface UserProfile {
   uid: string
   displayName: string
@@ -22,6 +30,8 @@ export interface UserProfile {
   vehicles: Vehicle[]
   createdAt: Date
   onboardingComplete: boolean
+  driveCache?: DriveCache
+  driveCacheLocation?: { lat: number; lng: number }
 }
 
 export interface Vote {

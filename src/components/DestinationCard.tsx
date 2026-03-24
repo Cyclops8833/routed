@@ -1,10 +1,11 @@
 import type { RefObject } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
 import type { RankedDestination } from '../utils/rankDestinations'
-import type { UserProfile } from '../types'
+import type { UserProfile, DriveCache } from '../types'
 import { fetchRoutes, drawRoutes, clearRoutes, setDestination } from '../utils/mapRoutes'
 import { calculateCosts } from '../utils/costEngine'
 import type { FuelPrices } from '../utils/costEngine'
+import { formatDriveTime } from '../utils/driveCache'
 import ShortlistButton from './ShortlistButton'
 
 interface DestinationCardProps {
@@ -20,6 +21,7 @@ interface DestinationCardProps {
   maxBudget?: number
   fuelPrices?: FuelPrices
   currentUserUid?: string
+  currentUserDriveCache?: DriveCache | null
   shortlistedByUids?: string[]
   allMembers?: UserProfile[]
 }
@@ -69,6 +71,7 @@ export default function DestinationCard({
   maxBudget = 500,
   fuelPrices = { petrol: 1.90, diesel: 1.85 },
   currentUserUid,
+  currentUserDriveCache,
   shortlistedByUids = [],
   allMembers = [],
 }: DestinationCardProps) {
@@ -330,7 +333,13 @@ export default function DestinationCard({
             color: 'var(--color-stone)',
           }}
         >
-          <span>🕐 {driveRangeStr}</span>
+          {currentUserDriveCache?.[dest.id] ? (
+            <span style={{ color: 'var(--color-moss)', fontWeight: 600 }}>
+              🕐 {formatDriveTime(currentUserDriveCache[dest.id].durationMinutes)} from you
+            </span>
+          ) : (
+            <span>🕐 {driveRangeStr}</span>
+          )}
           <span>
             ⛺{' '}
             {dest.campsiteCostPerNight === 0

@@ -434,6 +434,8 @@ export default function QuickPlanSheet({ mapRef, currentUser, onClose, onSwitchT
                 attendees={crewMembers.filter((m) => selectedAttendees.has(m.uid))}
                 attendeeColours={attendeeColours}
                 onViewOnMap={() => {}}
+                currentUserUid={currentUser?.uid}
+                currentUserDriveCache={currentUser?.driveCache ?? null}
               />
             ))}
           </div>

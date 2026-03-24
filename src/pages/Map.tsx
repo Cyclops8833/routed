@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { collection, getDocs, query, where, onSnapshot } from 'firebase/firestore'
+import { collection, getDocs, getDoc, doc, query, where, onSnapshot } from 'firebase/firestore'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -9,7 +9,9 @@ import type { UserProfile } from '../types'
 import TripSheet from '../components/TripSheet'
 import QuickPlanSheet from '../components/QuickPlanSheet'
 import { addDestinationDots } from '../utils/mapDestinations'
-import { getSpotlightDestinations, estimateDriveHours } from '../utils/spotlight'
+import { getSpotlightDestinations } from '../utils/spotlight'
+import { isCacheValid, buildDriveCache, saveDriveCache, formatDriveTime } from '../utils/driveCache'
+import type { DriveCache } from '../types'
 import type { Destination } from '../data/destinations'
 import TopoPattern from '../components/TopoPattern'
 // Key must match the one exported from Trips.tsx
@@ -108,12 +110,23 @@ type PlanMode = 'picker' | 'quick' | 'manual'
 
 function SpotlightCard({
   dest,
+  driveCache,
   onTap,
 }: {
   dest: Destination
+  driveCache: DriveCache | null
   onTap: (dest: Destination) => void
 }) {
-  const driveHrs = estimateDriveHours(dest)
+  const cached = driveCache?.[dest.id]
+  const driveLabel = cached
+    ? `${formatDriveTime(cached.durationMinutes)} from you`
+    : `~${Math.round((() => {
+        const R = 6371, lat1 = -37.0, lng1 = 144.5
+        const dLat = ((dest.lat - lat1) * Math.PI) / 180
+        const dLng = ((dest.lng - lng1) * Math.PI) / 180
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(dest.lat*Math.PI/180)*Math.sin(dLng/2)**2
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) / 100
+      })() * 10) / 10}hr drive`
   const acts = dest.activities.slice(0, 2).map((a) => {
     if (a === 'camping') return '🏕️'
     if (a === 'hiking') return '🥾'
@@ -187,7 +200,7 @@ function SpotlightCard({
         color: '#8C8578',
         marginTop: '2px',
       }}>
-        ~{driveHrs}hr drive · {acts.join(' ')}
+        {driveLabel} · {acts.join(' ')}
       </div>
     </button>
   )
@@ -204,6 +217,8 @@ export default function MapPage() {
   const [planMode, setPlanMode] = useState<PlanMode>('picker')
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [currentUid, setCurrentUid] = useState<string | null>(null)
+  const [driveCache, setDriveCache] = useState<DriveCache | null>(null)
+  const [cacheProgress, setCacheProgress] = useState<{ done: number; total: number } | null>(null)
   const [hasTrips, setHasTrips] = useState<boolean | null>(null)
   const dragStartY = useRef<number | null>(null)
   const dragPointerId = useRef<number | null>(null)
@@ -301,6 +316,40 @@ export default function MapPage() {
       })
     })
     return unsub
+  }, [currentUid])
+
+  // Check / build drive cache for the current user
+  useEffect(() => {
+    if (!currentUid) return
+
+    async function checkAndBuildCache() {
+      const snap = await getDoc(doc(db, 'users', currentUid!))
+      if (!snap.exists()) return
+      const profile = snap.data() as UserProfile
+      const loc = profile.homeLocation
+      if (!loc) return
+
+      if (isCacheValid(profile.driveCache, profile.driveCacheLocation, loc.lat, loc.lng)) {
+        setDriveCache(profile.driveCache ?? null)
+        return
+      }
+
+      // Cache missing/stale — build it
+      setCacheProgress({ done: 0, total: 70 })
+      try {
+        const cache = await buildDriveCache(loc.lat, loc.lng, (done, total) => {
+          setCacheProgress({ done, total })
+        })
+        await saveDriveCache(currentUid!, cache, loc.lat, loc.lng)
+        setDriveCache(cache)
+      } catch (err) {
+        console.error('Drive cache build failed:', err)
+      } finally {
+        setCacheProgress(null)
+      }
+    }
+
+    checkAndBuildCache()
   }, [currentUid])
 
   // Load crew and place markers once map is loaded
@@ -521,6 +570,47 @@ export default function MapPage() {
         </div>
       )}
 
+      {/* Drive cache build progress overlay */}
+      {cacheProgress !== null && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 'calc(var(--tab-bar-height) + env(safe-area-inset-bottom) + 12px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 40,
+            background: 'rgba(42,42,38,0.92)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            borderRadius: '12px',
+            padding: '12px 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+            minWidth: '240px',
+          }}
+        >
+          <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '13px', fontWeight: '600', color: '#FAFAF7' }}>
+            Calculating your drive times…
+          </div>
+          <div style={{ width: '100%', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.15)', overflow: 'hidden' }}>
+            <div
+              style={{
+                height: '100%',
+                borderRadius: '2px',
+                background: '#4A6741',
+                width: `${Math.round((cacheProgress.done / cacheProgress.total) * 100)}%`,
+                transition: 'width 0.3s ease',
+              }}
+            />
+          </div>
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: 'rgba(250,250,247,0.6)' }}>
+            {cacheProgress.done} / {cacheProgress.total} destinations
+          </div>
+        </div>
+      )}
+
       {/* Map container */}
       <div
         ref={mapContainerRef}
@@ -632,7 +722,7 @@ export default function MapPage() {
         >
           <div className="spotlight-row" style={{ flex: 1 }}>
             {spotlightDests.map((dest) => (
-              <SpotlightCard key={dest.id} dest={dest} onTap={handleSpotlightTap} />
+              <SpotlightCard key={dest.id} dest={dest} driveCache={driveCache} onTap={handleSpotlightTap} />
             ))}
           </div>
           {/* Desktop labelled shuffle button */}
