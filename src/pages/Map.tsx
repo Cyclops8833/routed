@@ -8,6 +8,7 @@ import { MAPBOX_TOKEN } from '../config'
 import type { UserProfile } from '../types'
 import TripSheet from '../components/TripSheet'
 import QuickPlanSheet from '../components/QuickPlanSheet'
+import DirectTripSheet from '../components/DirectTripSheet'
 import { addDestinationDots } from '../utils/mapDestinations'
 import { getSpotlightDestinations } from '../utils/spotlight'
 import { isCacheValid, buildDriveCache, saveDriveCache, formatDriveTime } from '../utils/driveCache'
@@ -106,7 +107,7 @@ function buildPopupHTML(member: UserProfile): string {
 }
 
 type SheetMode = 'closed' | 'full' | 'peek'
-type PlanMode = 'picker' | 'quick' | 'manual'
+type PlanMode = 'picker' | 'quick' | 'manual' | 'destination'
 
 function SpotlightCard({
   dest,
@@ -215,6 +216,7 @@ export default function MapPage() {
   const [isSatellite, setIsSatellite] = useState(false)
   const [sheetMode, setSheetMode] = useState<SheetMode>('closed')
   const [planMode, setPlanMode] = useState<PlanMode>('picker')
+  const [preselectDestId, setPreselectDestId] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [currentUid, setCurrentUid] = useState<string | null>(null)
   const [driveCache, setDriveCache] = useState<DriveCache | null>(null)
@@ -289,10 +291,9 @@ export default function MapPage() {
         getShortlists: () => shortlistsRef.current,
         getMembers: () => crewMembersRef.current,
         onPlanTrip: (destinationId) => {
-          // Store pre-selected destination and open Quick Plan
-          localStorage.setItem('routed-preselect-destination', destinationId)
+          setPreselectDestId(destinationId)
           setSheetMode('full')
-          setPlanMode('quick')
+          setPlanMode('destination')
         },
       })
       setMapLoaded(true)
@@ -951,7 +952,14 @@ export default function MapPage() {
 
             {/* Sheet content — scrollable */}
             <div style={{ height: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingTop: '24px' }}>
-              {planMode === 'quick' ? (
+              {planMode === 'destination' && preselectDestId ? (
+                <DirectTripSheet
+                  destinationId={preselectDestId}
+                  currentUser={currentUser}
+                  onClose={handleSheetClose}
+                  onChangeDest={() => { setPreselectDestId(null); setPlanMode('picker') }}
+                />
+              ) : planMode === 'quick' ? (
                 <QuickPlanSheet
                   mapRef={mapRef}
                   currentUser={currentUser}
