@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore'
+import { collection, query, where, onSnapshot, orderBy, getDocs } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
 import { db, auth } from '../firebase'
-import type { Trip } from '../types'
+import type { Trip, UserProfile, Shortlist } from '../types'
 import { getUpcomingLongWeekends } from '../data/publicHolidays'
+import { subscribeToAllShortlists } from '../utils/shortlistUtils'
+import { destinations } from '../data/destinations'
 
 const PENDING_DATES_KEY = 'routed-pending-trip-dates'
 
@@ -37,6 +39,8 @@ export default function TripsPage() {
   const [loading, setLoading] = useState(true)
   const [uid, setUid] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming')
+  const [shortlists, setShortlists] = useState<Shortlist[]>([])
+  const [allMembers, setAllMembers] = useState<UserProfile[]>([])
   const navigate = useNavigate()
 
   // Listen for auth state
@@ -44,6 +48,19 @@ export default function TripsPage() {
     const unsub = onAuthStateChanged(auth, (user) => {
       setUid(user?.uid ?? null)
     })
+    return unsub
+  }, [])
+
+  // Load all crew members
+  useEffect(() => {
+    getDocs(collection(db, 'users')).then((snap) => {
+      setAllMembers(snap.docs.map((d) => d.data() as UserProfile))
+    }).catch(() => {})
+  }, [])
+
+  // Subscribe to all shortlists
+  useEffect(() => {
+    const unsub = subscribeToAllShortlists(setShortlists)
     return unsub
   }, [])
 
@@ -427,6 +444,119 @@ export default function TripsPage() {
           </div>
         )}
       </div>
+
+      {/* Crew Wishlist section */}
+      {activeTab === 'upcoming' && !loading && (() => {
+        // Group shortlists by destinationId
+        const countsByDest: Record<string, Set<string>> = {}
+        for (const s of shortlists) {
+          if (!countsByDest[s.destinationId]) countsByDest[s.destinationId] = new Set()
+          countsByDest[s.destinationId].add(s.memberUid)
+        }
+        const wishlistEntries = Object.entries(countsByDest)
+          .sort((a, b) => b[1].size - a[1].size)
+          .slice(0, 6)
+
+        if (wishlistEntries.length === 0) {
+          return (
+            <div style={{ padding: '0 16px 24px' }}>
+              <h3 style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '18px', fontWeight: '700', color: 'var(--color-charcoal)', margin: '0 0 4px' }}>
+                Crew Wishlist
+              </h3>
+              <p style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '13px', color: 'var(--color-stone)', margin: '0 0 12px' }}>
+                Spots the crew want to visit
+              </p>
+              <p style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: 'var(--color-stone)', margin: 0, fontStyle: 'italic' }}>
+                No wishlist yet. Heart a destination to add it.
+              </p>
+            </div>
+          )
+        }
+
+        return (
+          <div style={{ padding: '0 16px 24px' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <h3 style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '18px', fontWeight: '700', color: 'var(--color-charcoal)', margin: '0 0 4px' }}>
+                Crew Wishlist
+              </h3>
+              <p style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '13px', color: 'var(--color-stone)', margin: 0 }}>
+                Spots the crew want to visit
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px' }}>
+              {wishlistEntries.map(([destId, uids]) => {
+                const dest = destinations.find((d) => d.id === destId)
+                if (!dest) return null
+                const count = uids.size
+                const avatarUids = [...uids].slice(0, 3)
+                return (
+                  <div
+                    key={destId}
+                    style={{
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: '12px',
+                      padding: '12px',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                    }}
+                  >
+                    <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '14px', fontWeight: '700', color: 'var(--color-charcoal)', marginBottom: '4px', lineHeight: 1.3 }}>
+                      {dest.name}
+                    </div>
+                    <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '12px', color: 'var(--color-stone)', marginBottom: '6px' }}>
+                      {dest.region}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '12px', color: '#C4893B', fontWeight: '600', fontFamily: 'DM Sans, system-ui, sans-serif' }}>
+                        ❤️ {count} crew keen
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '2px', marginBottom: '8px' }}>
+                      {avatarUids.map((uid) => {
+                        const m = allMembers.find((mb) => mb.uid === uid)
+                        if (!m) return null
+                        const src = m.customPhotoURL ?? m.photoURL
+                        return src ? (
+                          <img key={uid} src={src} alt={m.displayName} style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--color-surface)' }} />
+                        ) : (
+                          <div key={uid} style={{ width: 20, height: 20, borderRadius: '50%', background: '#4A6741', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, border: '1.5px solid var(--color-surface)' }}>
+                            {m.displayName.charAt(0).toUpperCase()}
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <button
+                      onClick={() => {
+                        try {
+                          localStorage.setItem(PENDING_DATES_KEY, JSON.stringify({ destId: dest.id }))
+                        } catch { /* ignore */ }
+                        navigate('/map')
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '6px 10px',
+                        borderRadius: '8px',
+                        background: 'rgba(74,103,65,0.1)',
+                        border: '1px solid rgba(74,103,65,0.25)',
+                        color: '#4A6741',
+                        fontFamily: 'DM Sans, system-ui, sans-serif',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'background 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(74,103,65,0.18)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(74,103,65,0.1)' }}
+                    >
+                      Start planning →
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Long weekends planning section */}
       {activeTab === 'upcoming' && !loading && (() => {

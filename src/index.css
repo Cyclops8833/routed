@@ -83,6 +83,57 @@ h1, h2, h3, h4, h5, h6 {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Cdefs%3E%3Cfilter id='tf'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.018' numOctaves='3' seed='7' result='turb'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='turb' scale='8' xChannelSelector='R' yChannelSelector='G'/%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23tf)'%3E%3Cpath d='M400,110 C480,105 570,140 600,200 C640,270 620,355 580,410 C540,465 460,490 400,492 C340,494 260,465 220,410 C175,350 160,265 200,200 C235,140 320,115 400,110 Z' fill='none' stroke='%23C4893B' stroke-width='0.6' opacity='0.03'/%3E%3Cpath d='M400,145 C472,140 552,172 580,228 C615,292 596,370 558,420 C520,468 448,490 400,491 C352,492 280,468 242,420 C198,368 182,288 218,228 C248,172 328,150 400,145 Z' fill='none' stroke='%23C4893B' stroke-width='0.8' opacity='0.04'/%3E%3Cpath d='M400,178 C466,174 538,202 564,254 C592,312 574,384 538,430 C502,474 440,493 400,494 C360,495 298,473 262,430 C220,384 206,308 234,254 C260,202 334,182 400,178 Z' fill='none' stroke='%23C4893B' stroke-width='0.9' opacity='0.05'/%3E%3Cpath d='M400,210 C460,206 525,232 549,280 C576,334 559,400 524,440 C490,478 432,494 400,494 C368,494 310,477 276,440 C238,400 224,330 252,280 C276,232 340,214 400,210 Z' fill='none' stroke='%23C4893B' stroke-width='1' opacity='0.05'/%3E%3Cpath d='M400,242 C455,238 512,261 534,306 C558,356 542,415 510,452 C478,487 424,498 400,498 C376,498 322,486 290,452 C256,416 242,352 266,306 C288,261 345,246 400,242 Z' fill='none' stroke='%23C4893B' stroke-width='1.1' opacity='0.06'/%3E%3Cpath d='M400,272 C449,268 500,290 520,331 C542,376 527,430 497,462 C466,492 416,502 400,502 C384,502 334,491 303,462 C270,430 256,372 278,331 C300,290 351,276 400,272 Z' fill='none' stroke='%23C4893B' stroke-width='1.2' opacity='0.07'/%3E%3Cpath d='M400,300 C444,296 489,316 507,354 C527,396 512,443 484,472 C456,499 410,506 400,506 C390,506 344,499 316,472 C286,443 272,392 292,354 C310,316 356,304 400,300 Z' fill='none' stroke='%23C4893B' stroke-width='1.2' opacity='0.07'/%3E%3Cpath d='M400,328 C438,324 477,342 493,376 C511,414 496,456 470,480 C445,503 406,510 400,510 C394,510 355,502 330,480 C302,456 287,410 306,376 C322,342 362,332 400,328 Z' fill='none' stroke='%23C4893B' stroke-width='1.2' opacity='0.06'/%3E%3Cpath d='M400,355 C432,352 465,367 479,398 C494,432 480,468 456,488 C432,507 402,512 400,512 C398,512 368,506 344,488 C318,468 306,428 322,398 C336,367 368,358 400,355 Z' fill='none' stroke='%23C4893B' stroke-width='1' opacity='0.05'/%3E%3Cpath d='M400,382 C426,379 452,392 464,419 C477,448 463,478 441,494 C420,509 398,512 400,512 C402,512 380,508 358,494 C334,478 322,444 335,419 C348,392 374,385 400,382 Z' fill='none' stroke='%23C4893B' stroke-width='0.8' opacity='0.04'/%3E%3C/g%3E%3C/svg%3E");
 }
 
+/* ── TopoPattern SVG component ──────────────────────────────── */
+.topo-lines .topo-line {
+  stroke: #4A6741; /* moss green in light mode */
+}
+
+[data-theme="dark"] .topo-lines .topo-line {
+  stroke: #C4893B; /* ochre in dark mode */
+}
+
+.topo-pattern {
+  overflow: visible;
+}
+
+.topo-bg-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Spotlight shuffle — mobile icon-only / desktop labelled ── */
+.shuffle-btn-label {
+  display: inline;
+}
+
+.shuffle-btn-icon {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 767px) {
+  .shuffle-btn-label {
+    display: none;
+  }
+  .shuffle-btn-icon {
+    display: flex;
+  }
+}
+
+/* Welcome card fade-out */
+@keyframes welcomeFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.welcome-card-fade-out {
+  animation: welcomeFadeOut 0.3s ease-out forwards;
+}
+
 /* Topo pattern: concentric ellipses repeating as background */
 .topo-pattern {
   position: relative;

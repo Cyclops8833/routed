@@ -17,6 +17,14 @@ export type RoadType = "sealed" | "unsealed" | "4wd-only";
 export type Season = "summer" | "autumn" | "winter" | "spring";
 export type TripLength = "overnighter" | "long-weekend";
 
+export interface BookingInfo {
+  requiresBooking: boolean
+  bookingUrl: string | null
+  advanceNotice: string | null
+  peakWarning: string | null
+  costNote: string | null
+}
+
 export interface Destination {
   id: string;
   name: string;
@@ -34,6 +42,7 @@ export interface Destination {
   crewNotes: string | null;
   fishSpecies: string[];
   tags: string[];
+  bookingInfo: BookingInfo;
 }
 
 export const destinations: Destination[] = [
@@ -59,6 +68,7 @@ export const destinations: Destination[] = [
       "The boys' spot. Rainbow trout fishing up the Ovens east arm — hike a few km in with your gear. Cold river, good campsites along the bank. Overdue for a return trip.",
     fishSpecies: ["Rainbow trout", "Brown trout"],
     tags: ["free camping", "hike-in", "trout", "river", "alpine"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "lake-eildon-fraser",
@@ -78,6 +88,13 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout", "Rainbow trout", "Golden perch", "Murray cod"],
     tags: ["lake", "boat ramp", "stocked", "facilities"],
+    bookingInfo: {
+      requiresBooking: true,
+      bookingUrl: 'https://bookings.parks.vic.gov.au/book',
+      advanceNotice: 'Parks Vic bookable. Popular over summer and long weekends.',
+      peakWarning: null,
+      costNote: 'Half-price camping until 30 June 2027.',
+    },
   },
   {
     id: "jamieson-river-kevington",
@@ -97,6 +114,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "river", "gold history", "trout"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "howqua-river",
@@ -116,6 +134,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout", "Rainbow trout"],
     tags: ["free camping", "river", "trout", "popular", "family friendly"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "buckland-valley",
@@ -135,6 +154,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "river", "trout", "stocked", "near Bright"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "lake-catani-buffalo",
@@ -154,6 +174,13 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: [],
     tags: ["alpine", "lake", "granite", "swimming", "bushwalks", "bookings required"],
+    bookingInfo: {
+      requiresBooking: true,
+      bookingUrl: 'https://bookings.parks.vic.gov.au/book',
+      advanceNotice: 'Parks Vic releases bookings 4 times a year, approx 6–9 months in advance. Book early for summer.',
+      peakWarning: null,
+      costNote: 'Half-price camping until 30 June 2027 (Victorian Government initiative).',
+    },
   },
   {
     id: "lake-william-hovell",
@@ -173,6 +200,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "lake", "trout", "stocked", "quiet"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "wonnangatta-valley",
@@ -205,6 +233,7 @@ export const destinations: Destination[] = [
       "adventure",
       "unsolved murder",
     ],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "king-river-valley",
@@ -224,6 +253,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout"],
     tags: ["river", "trout", "wine region", "accessible"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "delatite-river-mansfield",
@@ -243,6 +273,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Rainbow trout", "Brown trout"],
     tags: ["free camping", "river", "trout", "fly fishing"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "lake-nillahcootie",
@@ -262,6 +293,7 @@ export const destinations: Destination[] = [
     crewNotes: "Closer to Hesko than most High Country spots. Could work as a shorter trip option.",
     fishSpecies: ["Murray cod", "Golden perch", "Brown trout", "Redfin"],
     tags: ["lake", "stocked", "Murray cod", "accessible"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
 
   // ============================================================
@@ -285,6 +317,13 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: [],
     tags: ["coastal", "national park", "bookings required", "iconic", "bushwalks"],
+    bookingInfo: {
+      requiresBooking: true,
+      bookingUrl: 'https://bookings.parks.vic.gov.au/book',
+      advanceNotice: 'Extremely popular — books out fast. Parks Vic releases 6–9 months ahead, 4 times a year.',
+      peakWarning: 'Minimum 2-night stay at peak periods (Christmas, Easter, long weekends).',
+      costNote: 'Half-price camping until 30 June 2027.',
+    },
   },
   {
     id: "thompson-river-walhalla",
@@ -304,6 +343,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout", "Australian bass"],
     tags: ["free camping", "river", "gold history", "trout", "bass", "hidden gem"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "aberfeldy-river",
@@ -323,6 +363,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "remote", "4wd", "waterfall", "river", "limited sites"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "blue-rock-lake",
@@ -342,6 +383,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "lake", "trout", "stocked", "quiet"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "mitchellriver-den-of-nargun",
@@ -361,6 +403,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Australian bass"],
     tags: ["4wd", "free camping", "river", "indigenous heritage", "national park"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "glenmaggie-lake",
@@ -380,6 +423,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Australian bass"],
     tags: ["lake", "stocked", "bass", "boat ramp"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "ninety-mile-beach-seaspray",
@@ -399,6 +443,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Gummy shark", "Flathead", "Australian salmon", "Whiting"],
     tags: ["free camping", "coastal", "beach", "surf fishing"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
 
   // ============================================================
@@ -422,6 +467,13 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: [],
     tags: ["national park", "bushwalks", "rock formations", "wildlife"],
+    bookingInfo: {
+      requiresBooking: true,
+      bookingUrl: 'https://bookings.parks.vic.gov.au/book',
+      advanceNotice: 'Parks Vic bookable. Borough Huts and Jimmy Creek nearby also bookable.',
+      peakWarning: null,
+      costNote: 'Half-price camping until 30 June 2027.',
+    },
   },
   {
     id: "lake-wartook-grampians",
@@ -441,6 +493,7 @@ export const destinations: Destination[] = [
     crewNotes: "Good option when planning trips around Archer in Ballarat — closer for him and Hesko.",
     fishSpecies: ["Rainbow trout", "Brown trout", "Redfin"],
     tags: ["free camping", "lake", "trout", "fly fishing", "quiet"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "rocklands-reservoir",
@@ -470,6 +523,7 @@ export const destinations: Destination[] = [
       "Redfin",
     ],
     tags: ["free camping", "lake", "Murray cod", "stocked", "boat ramp"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
 
   // ============================================================
@@ -493,6 +547,13 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: [],
     tags: ["ridge walk", "rock scrambling", "close to Melbourne", "state park"],
+    bookingInfo: {
+      requiresBooking: true,
+      bookingUrl: 'https://bookings.parks.vic.gov.au/book',
+      advanceNotice: 'Parks Vic bookable. Book ahead for long weekends.',
+      peakWarning: null,
+      costNote: 'Half-price camping until 30 June 2027.',
+    },
   },
   {
     id: "tullaroop-reservoir",
@@ -512,6 +573,7 @@ export const destinations: Destination[] = [
     crewNotes: "Central location — works well when Hesko and Doug are both coming, roughly equidistant from Bendigo and Kyneton.",
     fishSpecies: ["Rainbow trout", "Brown trout"],
     tags: ["lake", "trout", "fly fishing", "goldfields", "stocked"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "lake-eppalock",
@@ -531,6 +593,7 @@ export const destinations: Destination[] = [
     crewNotes: "Very close to Doug in Kyneton. Note: no camping directly on the lake — use nearby campgrounds.",
     fishSpecies: ["Murray cod", "Golden perch", "Redfin"],
     tags: ["lake", "Murray cod", "stocked", "boat fishing"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "goulburn-river-seymour",
@@ -553,6 +616,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Murray cod", "Golden perch", "Redfin"],
     tags: ["free camping", "river", "Murray cod", "stocked"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "hepburn-lagoon",
@@ -572,6 +636,7 @@ export const destinations: Destination[] = [
     crewNotes: "Good halfway point between Archer (Ballarat) and the eastern crew. Fly fishing paradise in the cooler months.",
     fishSpecies: ["Brown trout"],
     tags: ["lake", "fly fishing", "trout", "stocked", "goldfields"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "lauriston-reservoir",
@@ -591,6 +656,7 @@ export const destinations: Destination[] = [
     crewNotes: "Basically in Doug's backyard. Good for a low-key overnight when not everyone can make a longer trip.",
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "lake", "trout", "stocked", "quiet", "close to Doug"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "cairn-curran-reservoir",
@@ -610,6 +676,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Murray cod", "Golden perch", "Redfin"],
     tags: ["free camping", "lake", "Murray cod", "stocked"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "butts-reserve-maldon",
@@ -629,6 +696,7 @@ export const destinations: Destination[] = [
     crewNotes: "Close to both Hesko (Bendigo) and Doug (Kyneton). Good gold history to explore in Maldon.",
     fishSpecies: [],
     tags: ["free camping", "gold history", "2WD", "facilities", "granite"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
 
   // ============================================================
@@ -652,6 +720,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Bream", "Australian salmon", "Trout", "Mulloway"],
     tags: ["free camping", "coastal", "river", "Great Ocean Walk", "fishing"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "lerderderg-gorge",
@@ -671,6 +740,7 @@ export const destinations: Destination[] = [
     crewNotes: "Shortest drive from Hampton Park/Berwick/Cranbourne. Under 2 hours for everyone except maybe Hesko.",
     fishSpecies: [],
     tags: ["free camping", "gorge", "close to Melbourne", "bushwalks", "wombats"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
 
   // ============================================================
@@ -694,6 +764,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout", "Rainbow trout"],
     tags: ["free camping", "river", "trout", "fly fishing", "trophy water", "stocked"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "waranga-basin",
@@ -713,6 +784,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Golden perch", "Murray cod", "Redfin"],
     tags: ["free camping", "lake", "golden perch", "stocked", "state forest"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "ovens-river-wangaratta",
@@ -732,6 +804,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout", "Macquarie perch (catch & release)"],
     tags: ["free camping", "river", "trout", "native fish", "stocked"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
 
   // ============================================================
@@ -755,6 +828,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: [],
     tags: ["free camping", "volcano", "unique", "close to Melbourne", "pine forest"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "lake-purrumbete",
@@ -774,6 +848,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Chinook salmon", "Brown trout"],
     tags: ["volcanic lake", "trophy fish", "salmon", "deep water", "kayak fishing"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "buchan-river-caves",
@@ -793,6 +868,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Australian bass", "Brown trout"],
     tags: ["caves", "river", "bass", "trout", "East Gippsland"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "dargo-river",
@@ -812,6 +888,7 @@ export const destinations: Destination[] = [
     crewNotes: null,
     fishSpecies: ["Brown trout", "Blackfish"],
     tags: ["free camping", "river", "trout", "4wd access", "remote", "pub"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
   {
     id: "poplars-west-gippsland",
@@ -831,6 +908,7 @@ export const destinations: Destination[] = [
     crewNotes: "Not far from Hampton Park/Berwick — could be a quick midweek overnighter.",
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "river", "trout", "close to Melbourne", "quiet"],
+    bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
   },
 ];
 

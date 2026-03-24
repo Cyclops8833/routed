@@ -5,6 +5,7 @@ import type { UserProfile } from '../types'
 import { fetchRoutes, drawRoutes, clearRoutes, setDestination } from '../utils/mapRoutes'
 import { calculateCosts } from '../utils/costEngine'
 import type { FuelPrices } from '../utils/costEngine'
+import ShortlistButton from './ShortlistButton'
 
 interface DestinationCardProps {
   ranked: RankedDestination
@@ -18,6 +19,9 @@ interface DestinationCardProps {
   nights?: number
   maxBudget?: number
   fuelPrices?: FuelPrices
+  currentUserUid?: string
+  shortlistedByUids?: string[]
+  allMembers?: UserProfile[]
 }
 
 const CREW_COLOURS = [
@@ -64,6 +68,9 @@ export default function DestinationCard({
   nights = 1,
   maxBudget = 500,
   fuelPrices = { petrol: 1.90, diesel: 1.85 },
+  currentUserUid,
+  shortlistedByUids = [],
+  allMembers = [],
 }: DestinationCardProps) {
   const { destination: dest, routes, estimatedCostPerPerson, overBudget } = ranked
 
@@ -206,24 +213,77 @@ export default function DestinationCard({
                 </span>
               )}
             </div>
+            {/* Booking badge */}
+            <div style={{ marginTop: '6px' }}>
+              {dest.bookingInfo.requiresBooking ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: '#C4893B',
+                    background: 'rgba(196,137,59,0.1)',
+                    border: '1px solid rgba(196,137,59,0.35)',
+                    borderRadius: '100px',
+                    padding: '2px 8px',
+                    whiteSpace: 'nowrap',
+                    fontFamily: 'DM Sans, system-ui, sans-serif',
+                  }}
+                >
+                  📅 Booking required
+                </span>
+              ) : (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: '#4A6741',
+                    background: 'rgba(74,103,65,0.08)',
+                    border: '1px solid rgba(74,103,65,0.25)',
+                    borderRadius: '100px',
+                    padding: '2px 8px',
+                    whiteSpace: 'nowrap',
+                    fontFamily: 'DM Sans, system-ui, sans-serif',
+                  }}
+                >
+                  ✓ No booking needed
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Select checkbox */}
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={() => onToggleSelect(dest.id)}
-              style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#4A6741' }}
-            />
-          </label>
+          {/* Right side: shortlist + checkbox */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flexShrink: 0 }}>
+            {currentUserUid && (
+              <ShortlistButton
+                destinationId={dest.id}
+                currentUserUid={currentUserUid}
+                shortlistedByUids={shortlistedByUids}
+                allMembers={allMembers}
+                size="md"
+              />
+            )}
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => onToggleSelect(dest.id)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#4A6741' }}
+              />
+            </label>
+          </div>
         </div>
 
         {/* Description */}
@@ -444,6 +504,64 @@ export default function DestinationCard({
             </div>
           )}
         </div>
+
+        {/* Booking info details */}
+        {dest.bookingInfo.requiresBooking && (
+          <div
+            style={{
+              background: 'rgba(196,137,59,0.06)',
+              border: '1px solid rgba(196,137,59,0.2)',
+              borderRadius: '8px',
+              padding: '10px 12px',
+              marginBottom: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+            }}
+          >
+            {dest.bookingInfo.advanceNotice && (
+              <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '12px', color: 'var(--color-charcoal)' }}>
+                📋 {dest.bookingInfo.advanceNotice}
+              </div>
+            )}
+            {dest.bookingInfo.peakWarning && (
+              <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '12px', color: '#B85C38' }}>
+                ⚠️ {dest.bookingInfo.peakWarning}
+              </div>
+            )}
+            {dest.bookingInfo.costNote && (
+              <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '12px', color: '#4A6741' }}>
+                💰 {dest.bookingInfo.costNote}
+              </div>
+            )}
+            {dest.bookingInfo.bookingUrl && (
+              <a
+                href={dest.bookingInfo.bookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  display: 'inline-block',
+                  marginTop: '2px',
+                  fontFamily: 'DM Sans, system-ui, sans-serif',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#C4893B',
+                  textDecoration: 'none',
+                  border: '1px solid rgba(196,137,59,0.4)',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  alignSelf: 'flex-start',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(196,137,59,0.1)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+              >
+                Book on Parks Vic →
+              </a>
+            )}
+          </div>
+        )}
 
         {/* View on map button */}
         <button

@@ -12,6 +12,7 @@ import { NotificationProvider } from './contexts/NotificationContext'
 
 const MapPage = lazy(() => import('./pages/Map'))
 const TripDetailPage = lazy(() => import('./pages/TripDetail'))
+const AvailabilityPage = lazy(() => import('./pages/Availability'))
 
 function LoadingScreen() {
   return (
@@ -63,6 +64,7 @@ function AppContent() {
           <Route path="/trips/:tripId" element={<TripDetailPage />} />
           <Route path="/crew" element={<CrewPage />} />
           <Route path="/profile" element={<ProfilePage profile={profile} />} />
+          <Route path="/availability" element={<AvailabilityPage />} />
           <Route path="*" element={<Navigate to="/map" replace />} />
         </Routes>
       </Suspense>

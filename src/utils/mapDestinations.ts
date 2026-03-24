@@ -1,6 +1,8 @@
 import type mapboxgl from 'mapbox-gl'
 import { destinations } from '../data/destinations'
 
+const SHORTLIST_RING_LAYER = 'destinations-shortlist-ring'
+
 const SOURCE_ID = 'destinations-source'
 const DOTS_LAYER = 'destinations-dots'
 const HOVER_LAYER = 'destinations-dots-hover'
@@ -101,6 +103,13 @@ export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Pop
       String(props.activities ?? '').split(',').filter(Boolean)
     )
 
+    // Look up booking info from full destination data
+    const destData = destinations.find((d) => d.id === props.id)
+    const requiresBooking = destData?.bookingInfo?.requiresBooking ?? false
+    const bookingBadge = requiresBooking
+      ? `<div style="font-size:11px; font-weight:600; color:#C4893B; background:rgba(196,137,59,0.1); border:1px solid rgba(196,137,59,0.3); border-radius:100px; padding:2px 8px; display:inline-block; margin-bottom:4px;">📅 Booking required</div>`
+      : `<div style="font-size:11px; font-weight:600; color:#4A6741; background:rgba(74,103,65,0.08); border:1px solid rgba(74,103,65,0.25); border-radius:100px; padding:2px 8px; display:inline-block; margin-bottom:4px;">✓ First in, first served</div>`
+
     const html = `
       <div style="font-family: DM Sans, system-ui, sans-serif; min-width: 180px;">
         <div style="font-family: Fraunces, Georgia, serif; font-size:15px; font-weight:700; color:#2D2D2D; margin-bottom:6px;">
@@ -111,6 +120,7 @@ export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Pop
             ${props.region}
           </span>
         </div>
+        ${bookingBadge}
         <div style="font-size:12px; color:#8C8578; margin-bottom:4px;">⛺ ${costText}</div>
         ${activityIcons ? `<div style="font-size:14px; margin-top:4px;">${activityIcons}</div>` : ''}
       </div>
@@ -127,6 +137,46 @@ export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Pop
       .setHTML(html)
       .addTo(map)
   })
+}
+
+/**
+ * Update destination dot visuals based on shortlist data.
+ * Destinations with 2+ shortlists get an outer ring.
+ */
+export function updateDestinationShortlistVisuals(
+  map: mapboxgl.Map,
+  shortlistedDestinationIds: string[]
+): void {
+  if (!map.getLayer(DOTS_LAYER)) return
+
+  // Count shortlists per destination
+  const counts: Record<string, number> = {}
+  for (const id of shortlistedDestinationIds) {
+    counts[id] = (counts[id] ?? 0) + 1
+  }
+  const popularIds = Object.entries(counts)
+    .filter(([, count]) => count >= 2)
+    .map(([id]) => id)
+
+  // Add ring layer if not present
+  if (!map.getLayer(SHORTLIST_RING_LAYER)) {
+    map.addLayer({
+      id: SHORTLIST_RING_LAYER,
+      type: 'circle',
+      source: SOURCE_ID,
+      filter: ['in', ['get', 'id'], ['literal', popularIds]],
+      paint: {
+        'circle-radius': 12,
+        'circle-color': 'transparent',
+        'circle-opacity': 0,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#C4893B',
+        'circle-stroke-opacity': 0.45,
+      },
+    }, DOTS_LAYER)
+  } else {
+    map.setFilter(SHORTLIST_RING_LAYER, ['in', ['get', 'id'], ['literal', popularIds]])
+  }
 }
 
 /**

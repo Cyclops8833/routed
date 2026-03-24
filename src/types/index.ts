@@ -30,6 +30,13 @@ export interface Vote {
   votedAt: Date
 }
 
+export interface Shortlist {
+  id?: string
+  memberUid: string
+  destinationId: string
+  createdAt: Date
+}
+
 export interface Trip {
   id: string
   name: string

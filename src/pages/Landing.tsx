@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { signInWithPopup } from 'firebase/auth'
 import { auth, googleProvider } from '../firebase'
+import TopoPattern from '../components/TopoPattern'
 
 function GoogleIcon() {
   return (
@@ -49,7 +50,7 @@ export default function Landing() {
 
   return (
     <div
-      className="topo-pattern--visible noise-overlay"
+      className="topo-bg-wrapper noise-overlay"
       style={{
         minHeight: '100dvh',
         display: 'flex',
@@ -62,23 +63,12 @@ export default function Landing() {
       }}
     >
       {/* Topo background pattern */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='140' viewBox='0 0 200 140'%3E%3Cellipse cx='100' cy='70' rx='90' ry='55' fill='none' stroke='%234A6741' stroke-width='0.8'/%3E%3Cellipse cx='100' cy='70' rx='72' ry='42' fill='none' stroke='%234A6741' stroke-width='0.8'/%3E%3Cellipse cx='100' cy='70' rx='54' ry='30' fill='none' stroke='%234A6741' stroke-width='0.8'/%3E%3Cellipse cx='100' cy='70' rx='36' ry='19' fill='none' stroke='%234A6741' stroke-width='0.8'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '200px 140px',
-          opacity: 0.05,
-          pointerEvents: 'none',
-        }}
-        aria-hidden="true"
-      />
+      <TopoPattern />
 
       <div
         style={{
           position: 'relative',
-          zIndex: 1,
+          zIndex: 2,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

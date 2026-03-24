@@ -11,8 +11,10 @@ import QuickPlanSheet from '../components/QuickPlanSheet'
 import { addDestinationDots } from '../utils/mapDestinations'
 import { getSpotlightDestinations, estimateDriveHours } from '../utils/spotlight'
 import type { Destination } from '../data/destinations'
+import TopoPattern from '../components/TopoPattern'
 // Key must match the one exported from Trips.tsx
 const PENDING_DATES_KEY = 'routed-pending-trip-dates'
+const WELCOME_SEEN_KEY = 'routed-welcome-seen'
 
 const MAP_STYLE_TERRAIN = 'mapbox://styles/mapbox/outdoors-v12'
 const MAP_STYLE_SATELLITE = 'mapbox://styles/mapbox/satellite-streets-v12'
@@ -210,6 +212,8 @@ export default function MapPage() {
   const [coachMarkVisible, setCoachMarkVisible] = useState(!localStorage.getItem(FAB_SEEN_KEY))
   const [spotlightDests, setSpotlightDests] = useState<Destination[]>([])
   const coachMarkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [welcomeVisible, setWelcomeVisible] = useState(!localStorage.getItem(WELCOME_SEEN_KEY))
+  const [welcomeFading, setWelcomeFading] = useState(false)
 
   // Listen for auth to get current uid
   useEffect(() => {
@@ -408,6 +412,15 @@ export default function MapPage() {
     }
   }, [])
 
+  const handleWelcomeDismiss = () => {
+    setWelcomeFading(true)
+    setTimeout(() => {
+      localStorage.setItem(WELCOME_SEEN_KEY, 'true')
+      setWelcomeVisible(false)
+      setWelcomeFading(false)
+    }, 300)
+  }
+
   const handleSpotlightTap = (dest: Destination) => {
     const map = mapRef.current
     if (!map) return
@@ -442,6 +455,7 @@ export default function MapPage() {
       {/* Loading overlay */}
       {isLoading && (
         <div
+          className="topo-bg-wrapper"
           style={{
             position: 'absolute',
             inset: 0,
@@ -451,23 +465,32 @@ export default function MapPage() {
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: 'var(--color-base)',
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='140' viewBox='0 0 200 140'%3E%3Cellipse cx='100' cy='70' rx='90' ry='55' fill='none' stroke='%234A6741' stroke-width='0.8' opacity='0.18'/%3E%3Cellipse cx='100' cy='70' rx='72' ry='42' fill='none' stroke='%234A6741' stroke-width='0.8' opacity='0.18'/%3E%3Cellipse cx='100' cy='70' rx='54' ry='30' fill='none' stroke='%234A6741' stroke-width='0.8' opacity='0.18'/%3E%3Cellipse cx='100' cy='70' rx='36' ry='19' fill='none' stroke='%234A6741' stroke-width='0.8' opacity='0.18'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'repeat',
-            backgroundSize: '200px 140px',
             gap: '20px',
           }}
         >
+          <TopoPattern />
           <div
             style={{
-              fontFamily: 'Fraunces, Georgia, serif',
-              fontSize: '24px',
-              fontWeight: '700',
-              color: 'var(--color-moss)',
+              position: 'relative',
+              zIndex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '20px',
             }}
           >
-            Routed
+            <div
+              style={{
+                fontFamily: 'Fraunces, Georgia, serif',
+                fontSize: '24px',
+                fontWeight: '700',
+                color: 'var(--color-moss)',
+              }}
+            >
+              Routed
+            </div>
+            <div className="spinner" />
           </div>
-          <div className="spinner" />
         </div>
       )}
 
@@ -515,25 +538,48 @@ export default function MapPage() {
         {isSatellite ? '🗺 Terrain' : '🛰 Satellite'}
       </button>
 
-      {/* Empty state — shown when no trips and map is loaded */}
-      {!isLoading && hasTrips === false && !sheetVisible && (
+      {/* Welcome card — shown on first visit, dismissable */}
+      {!isLoading && welcomeVisible && !sheetVisible && (
         <div
+          className={welcomeFading ? 'welcome-card-fade-out' : ''}
+          onClick={handleWelcomeDismiss}
           style={{
             position: 'absolute',
             top: '40%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
             zIndex: 10,
-            background: 'rgba(255,255,255,0.9)',
+            background: 'rgba(255,255,255,0.92)',
             borderRadius: '16px',
             padding: '20px 24px',
-            maxWidth: '260px',
+            maxWidth: '280px',
             textAlign: 'center',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.14)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
+            cursor: 'pointer',
+            transition: 'opacity 0.3s ease',
           }}
         >
+          {/* Dismiss × button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleWelcomeDismiss() }}
+            aria-label="Dismiss"
+            style={{
+              position: 'absolute',
+              top: '10px',
+              right: '12px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px',
+              color: 'var(--color-stone)',
+              lineHeight: 1,
+              padding: '2px 4px',
+            }}
+          >
+            ×
+          </button>
           <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '20px', fontWeight: '700', color: 'var(--color-charcoal)', marginBottom: '8px' }}>
             Your crew's on the map.
           </div>
@@ -562,8 +608,10 @@ export default function MapPage() {
               <SpotlightCard key={dest.id} dest={dest} onTap={handleSpotlightTap} />
             ))}
           </div>
+          {/* Desktop labelled shuffle button */}
           <button
             onClick={handleSpotlightShuffle}
+            className="shuffle-btn-label"
             style={{
               flexShrink: 0,
               marginRight: '12px',
@@ -583,6 +631,32 @@ export default function MapPage() {
             }}
           >
             ↺ Shuffle
+          </button>
+          {/* Mobile icon-only shuffle button */}
+          <button
+            onClick={handleSpotlightShuffle}
+            aria-label="Shuffle destinations"
+            className="shuffle-btn-icon"
+            style={{
+              flexShrink: 0,
+              marginRight: '12px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.9)',
+              border: '1px solid rgba(74,103,65,0.25)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#4A6741',
+              fontSize: '18px',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+            }}
+          >
+            ↺
           </button>
         </div>
       )}
