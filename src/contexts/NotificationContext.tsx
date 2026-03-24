@@ -12,10 +12,14 @@ import { db, auth } from '../firebase'
 import type { Trip } from '../types'
 
 interface NotificationContextValue {
-  unvotedTrips: number
+  unvotedTrips: number   // voting trips where current user hasn't voted (pulsing dot)
+  imminentTrips: number  // confirmed trips departing within 7 days
 }
 
-const NotificationContext = createContext<NotificationContextValue>({ unvotedTrips: 0 })
+const NotificationContext = createContext<NotificationContextValue>({
+  unvotedTrips: 0,
+  imminentTrips: 0,
+})
 
 export function useNotifications(): NotificationContextValue {
   return useContext(NotificationContext)
@@ -23,16 +27,16 @@ export function useNotifications(): NotificationContextValue {
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [unvotedTrips, setUnvotedTrips] = useState(0)
+  const [imminentTrips, setImminentTrips] = useState(0)
   const [uid, setUid] = useState<string | null>(null)
 
-  // Track auth state
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
       setUid(user?.uid ?? null)
     })
   }, [])
 
-  // Listen to voting trips for this user, check if they've voted
+  // Voting trips where this user hasn't voted yet
   useEffect(() => {
     if (!uid) {
       setUnvotedTrips(0)
@@ -45,15 +49,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       where('status', '==', 'voting')
     )
 
-    const unsubTrips = onSnapshot(q, async (snap) => {
+    const unsub = onSnapshot(q, async (snap) => {
       const votingTrips = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Trip))
-
       if (votingTrips.length === 0) {
         setUnvotedTrips(0)
         return
       }
-
-      // For each voting trip, check if this user has a vote doc
       const checks = votingTrips.map(async (trip) => {
         try {
           const voteDoc = await getDoc(doc(db, 'trips', trip.id, 'votes', uid))
@@ -62,17 +63,43 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           return false
         }
       })
-
       const results = await Promise.all(checks)
-      const count = results.filter(Boolean).length
-      setUnvotedTrips(count)
+      setUnvotedTrips(results.filter(Boolean).length)
     })
 
-    return unsubTrips
+    return unsub
+  }, [uid])
+
+  // Confirmed trips departing within 7 days
+  useEffect(() => {
+    if (!uid) {
+      setImminentTrips(0)
+      return
+    }
+
+    const q = query(
+      collection(db, 'trips'),
+      where('attendees', 'array-contains', uid),
+      where('status', '==', 'confirmed')
+    )
+
+    const unsub = onSnapshot(q, (snap) => {
+      const now = Date.now()
+      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
+      const count = snap.docs.filter((d) => {
+        const trip = d.data() as Trip
+        if (!trip.dateRange?.start) return false
+        const departure = new Date(trip.dateRange.start).getTime()
+        return departure > now && departure - now <= sevenDaysMs
+      }).length
+      setImminentTrips(count)
+    })
+
+    return unsub
   }, [uid])
 
   return (
-    <NotificationContext.Provider value={{ unvotedTrips }}>
+    <NotificationContext.Provider value={{ unvotedTrips, imminentTrips }}>
       {children}
     </NotificationContext.Provider>
   )

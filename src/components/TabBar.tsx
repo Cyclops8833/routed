@@ -123,7 +123,7 @@ const tabs: Tab[] = [
 
 export default function TabBar() {
   const location = useLocation()
-  const { unvotedTrips } = useNotifications()
+  const { unvotedTrips, imminentTrips } = useNotifications()
 
   return (
     <nav
@@ -142,9 +142,19 @@ export default function TabBar() {
         zIndex: 100,
       }}
     >
+      <style>{`
+        @keyframes notif-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+        .notif-dot--pulse {
+          animation: notif-pulse 2s ease-in-out infinite;
+        }
+      `}</style>
       {tabs.map((tab) => {
         const isActive = location.pathname === tab.path
-        const showDot = tab.path === '/trips' && unvotedTrips > 0
+        const showDot = tab.path === '/trips' && (unvotedTrips > 0 || imminentTrips > 0)
+        const pulseDot = tab.path === '/trips' && unvotedTrips > 0
         return (
           <NavLink
             key={tab.path}
@@ -170,6 +180,7 @@ export default function TabBar() {
               {tab.icon(isActive)}
               {showDot && (
                 <span
+                  className={pulseDot ? 'notif-dot notif-dot--pulse' : 'notif-dot'}
                   style={{
                     position: 'absolute',
                     top: '-1px',
@@ -177,7 +188,7 @@ export default function TabBar() {
                     width: '8px',
                     height: '8px',
                     borderRadius: '50%',
-                    background: '#7C5CBF',
+                    background: '#E07A5F',
                     border: '1.5px solid var(--color-surface)',
                   }}
                 />
