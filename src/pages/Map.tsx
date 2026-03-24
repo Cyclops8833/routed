@@ -217,6 +217,7 @@ export default function MapPage() {
   const [sheetMode, setSheetMode] = useState<SheetMode>('closed')
   const [planMode, setPlanMode] = useState<PlanMode>('picker')
   const [preselectDestId, setPreselectDestId] = useState<string | null>(null)
+  const [pendingDestForPlanning, setPendingDestForPlanning] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [currentUid, setCurrentUid] = useState<string | null>(null)
   const [driveCache, setDriveCache] = useState<DriveCache | null>(null)
@@ -232,8 +233,12 @@ export default function MapPage() {
   // For popup shortlist + member data — stored in refs so popup closures always read latest
   const shortlistsRef = useRef<Array<{ memberUid: string; destinationId: string }>>([])
   const crewMembersRef = useRef<UserProfile[]>([])
+  const planModeRef = useRef<PlanMode>('picker')
   const [welcomeVisible, setWelcomeVisible] = useState(!localStorage.getItem(WELCOME_SEEN_KEY))
   const [welcomeFading, setWelcomeFading] = useState(false)
+
+  // Keep planModeRef in sync so Mapbox popup closures always read latest value
+  useEffect(() => { planModeRef.current = planMode }, [planMode])
 
   // Listen for auth to get current uid
   useEffect(() => {
@@ -291,9 +296,16 @@ export default function MapPage() {
         getShortlists: () => shortlistsRef.current,
         getMembers: () => crewMembersRef.current,
         onPlanTrip: (destinationId) => {
-          setPreselectDestId(destinationId)
-          setSheetMode('full')
-          setPlanMode('destination')
+          if (planModeRef.current === 'manual' || planModeRef.current === 'quick') {
+            // Active planning session — resume with destination pre-selected
+            setPendingDestForPlanning(destinationId)
+            setSheetMode('full')
+          } else {
+            // No active session — open streamlined direct form
+            setPreselectDestId(destinationId)
+            setSheetMode('full')
+            setPlanMode('destination')
+          }
         },
       })
       setMapLoaded(true)
@@ -899,6 +911,8 @@ export default function MapPage() {
             onDragHandlePointerDown={handleDragHandlePointerDown}
             onDragHandlePointerMove={handleDragHandlePointerMove}
             onDragHandlePointerUp={handleDragHandlePointerUp}
+            pendingDestinationId={pendingDestForPlanning}
+            onPendingDestConsumed={() => setPendingDestForPlanning(null)}
           />
         )}
         {sheetVisible && planMode !== 'manual' && (
@@ -965,6 +979,8 @@ export default function MapPage() {
                   currentUser={currentUser}
                   onClose={handleSheetClose}
                   onSwitchToManual={() => setPlanMode('manual')}
+                  pendingDestinationId={pendingDestForPlanning}
+                  onPendingDestConsumed={() => setPendingDestForPlanning(null)}
                 />
               ) : (
                 /* Plan mode picker */
@@ -1024,6 +1040,33 @@ export default function MapPage() {
           </>
         )}
       </div>
+
+      {/* Back to planning button — shown when peeking with active plan */}
+      {sheetMode === 'peek' && (planMode === 'manual' || planMode === 'quick') && (
+        <button
+          onClick={() => setSheetMode('full')}
+          style={{
+            position: 'absolute',
+            bottom: 'calc(var(--tab-bar-height) + env(safe-area-inset-bottom) + 16px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 35,
+            background: 'var(--color-moss)',
+            color: '#FAFAF7',
+            border: 'none',
+            borderRadius: '100px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '700',
+            fontFamily: 'DM Sans, system-ui, sans-serif',
+            cursor: 'pointer',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          ← Back to planning
+        </button>
+      )}
 
       {/* Backdrop overlay when sheet is full */}
       {sheetMode === 'full' && (

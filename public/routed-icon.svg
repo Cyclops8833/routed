@@ -1,0 +1,28 @@
+<svg width="1024" height="1024" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<clipPath id="cp"><circle cx="256" cy="256" r="250"/></clipPath>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&amp;display=swap');
+</style>
+</defs>
+<circle cx="256" cy="256" r="256" fill="#2A3D25"/>
+<circle cx="256" cy="256" r="250" fill="#2A3D25"/>
+<g clip-path="url(#cp)">
+<path d="M-20 60 Q80 45 160 65 Q240 85 320 55 Q400 25 530 50" fill="none" stroke="#364E30" stroke-width="1.5" opacity="0.7"/>
+<path d="M-20 95 Q60 110 150 90 Q230 70 310 100 Q400 130 530 95" fill="none" stroke="#364E30" stroke-width="1.2" opacity="0.6"/>
+<path d="M-20 130 Q90 120 170 140 Q260 160 340 130 Q420 100 530 135" fill="none" stroke="#364E30" stroke-width="1.5" opacity="0.7"/>
+<path d="M-20 165 Q70 175 160 158 Q250 140 330 170 Q410 200 530 168" fill="none" stroke="#364E30" stroke-width="1" opacity="0.5"/>
+<path d="M-20 195 Q100 185 180 205 Q270 225 350 195 Q430 165 530 200" fill="none" stroke="#364E30" stroke-width="1.3" opacity="0.6"/>
+<path d="M-20 230 Q80 245 170 225 Q250 205 340 235 Q420 265 530 232" fill="none" stroke="#364E30" stroke-width="1" opacity="0.45"/>
+<path d="M-20 260 Q90 250 180 270 Q260 290 350 260 Q430 230 530 265" fill="none" stroke="#364E30" stroke-width="1.2" opacity="0.5"/>
+<path d="M-20 290 Q70 300 160 285 Q240 270 330 298 Q410 325 530 293" fill="none" stroke="#364E30" stroke-width="0.8" opacity="0.4"/>
+<path d="M-20 320 Q100 310 190 330 Q270 350 360 320 Q440 290 530 325" fill="none" stroke="#364E30" stroke-width="1" opacity="0.45"/>
+<path d="M-20 350 Q80 365 170 345 Q255 325 340 355 Q425 385 530 352" fill="none" stroke="#364E30" stroke-width="0.8" opacity="0.35"/>
+<path d="M0 512 L0 350 Q60 340 100 305 Q140 270 180 295 Q220 320 256 150 Q290 320 330 285 Q370 250 410 305 Q460 350 512 340 L512 512 Z" fill="#3A5434"/>
+<path d="M0 512 L0 385 Q80 370 140 345 Q200 320 256 210 Q310 320 370 340 Q440 365 512 375 L512 512 Z" fill="#42603A"/>
+<path d="M0 512 L0 420 Q100 412 170 395 Q230 378 256 300 Q280 378 340 393 Q410 410 512 418 L512 512 Z" fill="#4A6741"/>
+<path d="M-10 520 L-10 455 Q120 448 200 436 Q240 430 256 385 Q272 430 310 436 Q390 448 520 455 L520 520 Z" fill="#5C7E52"/>
+</g>
+<text x="256" y="340" text-anchor="middle" font-family="Fraunces, serif" font-size="275" font-weight="700" fill="#FAFAF7" opacity="0.95" letter-spacing="-6">R</text>
+<circle cx="256" cy="256" r="250" fill="none" stroke="#1E2E1A" stroke-width="5"/>
+</svg>

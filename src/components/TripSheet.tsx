@@ -18,6 +18,8 @@ interface TripSheetProps {
   onDragHandlePointerDown?: (e: React.PointerEvent<HTMLDivElement>) => void
   onDragHandlePointerMove?: (e: React.PointerEvent<HTMLDivElement>) => void
   onDragHandlePointerUp?: (e: React.PointerEvent<HTMLDivElement>) => void
+  pendingDestinationId?: string | null
+  onPendingDestConsumed?: () => void
 }
 
 type SheetView = 'form' | 'results'
@@ -41,7 +43,7 @@ function calcNights(start: string, end: string): number {
   return Math.max(1, Math.ceil((e - s) / 86400000))
 }
 
-export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDragHandlePointerDown, onDragHandlePointerMove, onDragHandlePointerUp }: TripSheetProps) {
+export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDragHandlePointerDown, onDragHandlePointerMove, onDragHandlePointerUp, pendingDestinationId, onPendingDestConsumed }: TripSheetProps) {
   const navigate = useNavigate()
 
   // Form state
@@ -64,6 +66,14 @@ export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDrag
 
   // Saving state
   const [isSaving, setIsSaving] = useState(false)
+
+  // When a destination is tapped "Plan a trip here" while this sheet is active
+  useEffect(() => {
+    if (!pendingDestinationId) return
+    setSelectedDestIds((prev) => new Set([...prev, pendingDestinationId]))
+    setView('results')
+    onPendingDestConsumed?.()
+  }, [pendingDestinationId])
 
   // Load crew members from Firestore
   useEffect(() => {

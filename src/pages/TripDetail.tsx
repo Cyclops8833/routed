@@ -151,6 +151,10 @@ export default function TripDetailPage() {
   const [newCheckItem, setNewCheckItem] = useState('')
   const [newComment, setNewComment] = useState('')
   const [commentSending, setCommentSending] = useState(false)
+  const [deadlineInput, setDeadlineInput] = useState('')
+  const [openingVoting, setOpeningVoting] = useState(false)
+  const [startingTrip, setStartingTrip] = useState(false)
+  const [completingTrip, setCompletingTrip] = useState(false)
 
   // ── Auth ──
   useEffect(() => {
@@ -432,12 +436,6 @@ export default function TripDetailPage() {
   const isConfirmedOrBeyond = ['confirmed', 'active', 'completed'].includes(trip.status)
   const isEditable = ['confirmed', 'active'].includes(trip.status)
   const countdown = countdownText(trip.dateRange.start)
-
-  // Voting deadline state
-  const [deadlineInput, setDeadlineInput] = useState('')
-  const [openingVoting, setOpeningVoting] = useState(false)
-  const [startingTrip, setStartingTrip] = useState(false)
-  const [completingTrip, setCompletingTrip] = useState(false)
 
   async function handleOpenVoting() {
     if (!tripId) return

@@ -28,6 +28,8 @@ interface QuickPlanSheetProps {
   currentUser: UserProfile | null
   onClose: () => void
   onSwitchToManual: () => void
+  pendingDestinationId?: string | null
+  onPendingDestConsumed?: () => void
 }
 
 const today = new Date().toISOString().split('T')[0]
@@ -49,7 +51,7 @@ function getAutoTripName(dest: Destination | null): string {
   return `Trip to ${dest.nearestTown || dest.name}`
 }
 
-export default function QuickPlanSheet({ mapRef, currentUser, onClose, onSwitchToManual }: QuickPlanSheetProps) {
+export default function QuickPlanSheet({ mapRef, currentUser, onClose, onSwitchToManual, pendingDestinationId, onPendingDestConsumed }: QuickPlanSheetProps) {
   const navigate = useNavigate()
   const [step, setStep] = useState<QuickStep>(0)
   const [tripLength, setTripLength] = useState<'overnighter' | 'long-weekend' | null>(null)
@@ -65,6 +67,14 @@ export default function QuickPlanSheet({ mapRef, currentUser, onClose, onSwitchT
   const [dateTo, setDateTo] = useState('')
   const [selectedDestIds, setSelectedDestIds] = useState<Set<string>>(new Set())
   const [isSaving, setIsSaving] = useState(false)
+
+  // When a destination is tapped "Plan a trip here" while this sheet is active
+  useEffect(() => {
+    if (!pendingDestinationId) return
+    setSelectedDestIds((prev) => new Set([...prev, pendingDestinationId]))
+    if (ranking.length > 0) setStep(4)
+    onPendingDestConsumed?.()
+  }, [pendingDestinationId])
 
   useEffect(() => {
     async function loadCrew() {

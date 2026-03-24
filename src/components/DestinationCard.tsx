@@ -153,6 +153,7 @@ export default function DestinationCard({
     }
 
     setDestination(map, dest.lat, dest.lng, dest.name)
+    map.flyTo({ center: [dest.lng, dest.lat], zoom: 10, duration: 1500, essential: true })
     onViewOnMap()
   }
 
