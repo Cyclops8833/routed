@@ -7,6 +7,7 @@ import type { Trip, UserProfile, Shortlist } from '../types'
 import { getUpcomingLongWeekends } from '../data/publicHolidays'
 import { subscribeToAllShortlists } from '../utils/shortlistUtils'
 import { destinations } from '../data/destinations'
+import TopoPattern from '../components/TopoPattern'
 
 const PENDING_DATES_KEY = 'routed-pending-trip-dates'
 
@@ -98,7 +99,6 @@ export default function TripsPage() {
   const pastTrips = trips.filter((t) => t.status === 'completed')
   const displayedTrips = activeTab === 'upcoming' ? upcomingTrips : pastTrips
 
-  const topoPattern = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='140' viewBox='0 0 200 140'%3E%3Cellipse cx='100' cy='70' rx='90' ry='55' fill='none' stroke='%234A6741' stroke-width='0.8' opacity='0.18'/%3E%3Cellipse cx='100' cy='70' rx='72' ry='42' fill='none' stroke='%234A6741' stroke-width='0.8' opacity='0.18'/%3E%3Cellipse cx='100' cy='70' rx='54' ry='30' fill='none' stroke='%234A6741' stroke-width='0.8' opacity='0.18'/%3E%3Cellipse cx='100' cy='70' rx='36' ry='19' fill='none' stroke='%234A6741' stroke-width='0.8' opacity='0.18'/%3E%3C/svg%3E")`
 
   return (
     <div
@@ -115,13 +115,11 @@ export default function TripsPage() {
           position: 'relative',
           padding: '32px 20px 24px',
           backgroundColor: 'var(--color-base)',
-          backgroundImage: topoPattern,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '200px 140px',
           borderBottom: '1px solid var(--color-border)',
           overflow: 'hidden',
         }}
       >
+        <TopoPattern />
         <div style={{ position: 'relative', zIndex: 1 }}>
           <h1
             style={{
