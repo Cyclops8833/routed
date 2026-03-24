@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 import { UserProfile, Vehicle } from '../types'
+import { getUserPhoto } from '../utils/userPhoto'
 
 type VehicleType = Vehicle['type']
 
@@ -77,9 +78,9 @@ function CrewCard({ member }: { member: UserProfile }) {
     >
       {/* Avatar + Name */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        {member.photoURL ? (
+        {getUserPhoto(member) ? (
           <img
-            src={member.photoURL}
+            src={getUserPhoto(member)!}
             alt={member.displayName}
             style={{
               width: '52px',

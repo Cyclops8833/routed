@@ -176,7 +176,7 @@ export default function Landing() {
             textAlign: 'center',
           }}
         >
-          Seven mates. One map. Let's go.
+          Eight mates. One map. Let's go.
         </p>
       </div>
     </div>

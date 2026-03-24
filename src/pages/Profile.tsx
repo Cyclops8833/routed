@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef } from 'react'
 import { signOut } from 'firebase/auth'
-import { doc, setDoc } from 'firebase/firestore'
+import { doc, setDoc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { UserProfile, Vehicle, HomeLocation } from '../types'
 import { useTheme } from '../hooks/useTheme'
+import { getUserPhoto } from '../utils/userPhoto'
 
 interface ProfilePageProps {
   profile: UserProfile
@@ -52,6 +53,45 @@ function VehicleTypeIcon({ type }: { type: VehicleType }) {
   )
 }
 
+async function processImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const size = 128
+      const canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { reject(new Error('No canvas context')); return }
+
+      // Cover crop to square
+      const srcSize = Math.min(img.width, img.height)
+      const sx = (img.width - srcSize) / 2
+      const sy = (img.height - srcSize) / 2
+      ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, size, size)
+
+      let quality = 0.82
+      let dataUri = canvas.toDataURL('image/jpeg', quality)
+
+      // Reduce quality if too large
+      if (dataUri.length > 70 * 1024) {
+        quality = 0.65
+        dataUri = canvas.toDataURL('image/jpeg', quality)
+      }
+      if (dataUri.length > 70 * 1024) {
+        quality = 0.5
+        dataUri = canvas.toDataURL('image/jpeg', quality)
+      }
+
+      resolve(dataUri)
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')) }
+    img.src = url
+  })
+}
+
 export default function ProfilePage({ profile }: ProfilePageProps) {
   const { theme, toggle: toggleTheme } = useTheme()
   const [displayName, setDisplayName] = useState(profile.displayName)
@@ -60,6 +100,9 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
   const [geocoding, setGeocoding] = useState(false)
   const [geocodeError, setGeocodeError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [customPhoto, setCustomPhoto] = useState<string | null>(profile.customPhotoURL ?? null)
+  const [photoUploading, setPhotoUploading] = useState(false)
 
   const [vehicles, setVehicles] = useState<VehicleForm[]>(
     profile.vehicles.map((v) => ({
@@ -174,6 +217,22 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
     }
   }
 
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPhotoUploading(true)
+    try {
+      const dataUri = await processImage(file)
+      await updateDoc(doc(db, 'users', profile.uid), { customPhotoURL: dataUri })
+      setCustomPhoto(dataUri)
+    } catch (err) {
+      console.error('Photo upload failed:', err)
+    } finally {
+      setPhotoUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   async function handleSignOut() {
     setSigningOut(true)
     try {
@@ -200,6 +259,15 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
         width: '100%',
       }}
     >
+      {/* Hidden file input for photo upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handlePhotoChange}
+      />
+
       {/* Header */}
       <div
         style={{
@@ -209,38 +277,72 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
           marginBottom: '32px',
         }}
       >
-        {profile.photoURL ? (
-          <img
-            src={profile.photoURL}
-            alt={profile.displayName}
+        {/* Avatar with edit button */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          {(() => {
+            const photoSrc = customPhoto ?? getUserPhoto(profile)
+            return photoSrc ? (
+              <img
+                src={photoSrc}
+                alt={profile.displayName}
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '3px solid var(--color-moss)',
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--color-moss)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '28px',
+                  fontFamily: 'Fraunces, Georgia, serif',
+                  fontWeight: '700',
+                }}
+              >
+                {initials}
+              </div>
+            )
+          })()}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={photoUploading}
+            aria-label="Edit profile photo"
             style={{
-              width: '64px',
-              height: '64px',
+              position: 'absolute',
+              bottom: '0',
+              right: '0',
+              width: '24px',
+              height: '24px',
               borderRadius: '50%',
-              objectFit: 'cover',
-              border: '3px solid var(--color-moss)',
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--color-moss)',
+              background: '#C4893B',
+              border: '2px solid var(--color-surface)',
+              cursor: photoUploading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'white',
-              fontSize: '24px',
-              fontFamily: 'Fraunces, Georgia, serif',
-              fontWeight: '700',
-              flexShrink: 0,
+              padding: 0,
             }}
           >
-            {initials}
-          </div>
-        )}
+            {photoUploading ? (
+              <span style={{ width: '10px', height: '10px', border: '1.5px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
+        </div>
         <div>
           <h1
             style={{

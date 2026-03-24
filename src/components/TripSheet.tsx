@@ -8,6 +8,7 @@ import type { UserProfile } from '../types'
 import { rankDestinations } from '../utils/rankDestinations'
 import type { RankedDestination } from '../utils/rankDestinations'
 import DestinationCard from './DestinationCard'
+import { getHolidaysInRange, getUpcomingLongWeekends } from '../data/publicHolidays'
 
 interface TripSheetProps {
   mapRef: RefObject<MapboxMap | null>
@@ -434,6 +435,53 @@ function FormView({
       {/* Date range */}
       <div>
         <label style={labelStyle}>Date range</label>
+
+        {/* Upcoming long weekend chips */}
+        {(() => {
+          const upcoming = getUpcomingLongWeekends(4)
+          if (upcoming.length === 0) return null
+          return (
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-stone)', fontFamily: 'DM Sans, system-ui, sans-serif', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Upcoming long weekends
+              </div>
+              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                {upcoming.map((lw, idx) => {
+                  const fromD = new Date(lw.from)
+                  const toD = new Date(lw.to)
+                  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
+                  const rangeStr = `${fromD.toLocaleDateString('en-AU', opts)}–${toD.toLocaleDateString('en-AU', opts)}`
+                  const shortName = lw.holiday.name.replace("King's Birthday", "King's Bday").replace('Friday before AFL Grand Final', 'AFL GF').replace('Australia Day', 'Aus Day')
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => { setDateFrom(lw.from); setDateTo(lw.to) }}
+                      style={{
+                        flexShrink: 0,
+                        padding: '6px 10px',
+                        borderRadius: '100px',
+                        border: '1.5px solid var(--color-border)',
+                        background: 'var(--color-surface)',
+                        cursor: 'pointer',
+                        fontFamily: 'DM Sans, system-ui, sans-serif',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        color: 'var(--color-charcoal)',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.1s ease',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#C4893B'; e.currentTarget.style.color = '#C4893B' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-charcoal)' }}
+                    >
+                      {shortName} — {rangeStr}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
+
         <div style={{ display: 'flex', gap: '10px' }}>
           <div style={{ flex: 1 }}>
             <div
@@ -476,6 +524,28 @@ function FormView({
             />
           </div>
         </div>
+
+        {/* Holiday banner */}
+        {dateFrom && dateTo && (() => {
+          const holidays = getHolidaysInRange(dateFrom, dateTo)
+          const longWknd = holidays.find((h) => h.isLongWeekend)
+          if (!longWknd) return null
+          return (
+            <div style={{
+              marginTop: '8px',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              background: 'rgba(196,137,59,0.1)',
+              border: '1px solid rgba(196,137,59,0.3)',
+              color: '#C4893B',
+              fontSize: '13px',
+              fontFamily: 'DM Sans, system-ui, sans-serif',
+              fontWeight: '600',
+            }}>
+              ✨ {longWknd.name} — long weekend!
+            </div>
+          )
+        })()}
       </div>
 
       {/* Trip length segmented control */}

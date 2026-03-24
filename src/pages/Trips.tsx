@@ -4,6 +4,9 @@ import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestor
 import { onAuthStateChanged } from 'firebase/auth'
 import { db, auth } from '../firebase'
 import type { Trip } from '../types'
+import { getUpcomingLongWeekends } from '../data/publicHolidays'
+
+const PENDING_DATES_KEY = 'routed-pending-trip-dates'
 
 function daysUntil(dateStr: string): number | null {
   if (!dateStr) return null
@@ -425,6 +428,71 @@ export default function TripsPage() {
         )}
       </div>
 
+      {/* Long weekends planning section */}
+      {activeTab === 'upcoming' && !loading && (() => {
+        const longWeekends = getUpcomingLongWeekends(4)
+        if (longWeekends.length === 0) return null
+        return (
+          <div style={{ padding: '0 16px 32px' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <h3 style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '18px', fontWeight: '700', color: 'var(--color-charcoal)', margin: '0 0 4px' }}>
+                Long Weekends
+              </h3>
+              <p style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '13px', color: 'var(--color-stone)', margin: 0 }}>
+                Tap to plan a trip for these dates
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {longWeekends.map((lw, idx) => {
+                const fromD = new Date(lw.from)
+                const toD = new Date(lw.to)
+                const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
+                const rangeStr = `${fromD.toLocaleDateString('en-AU', opts)} – ${toD.toLocaleDateString('en-AU', opts)}`
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      try {
+                        localStorage.setItem(PENDING_DATES_KEY, JSON.stringify({ from: lw.from, to: lw.to }))
+                      } catch { /* ignore */ }
+                      navigate('/map')
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      width: '100%',
+                      transition: 'all 0.15s ease',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(196,137,59,0.4)'; e.currentTarget.style.background = 'rgba(196,137,59,0.04)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.background = 'var(--color-surface)' }}
+                  >
+                    <div>
+                      <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', fontWeight: '700', color: 'var(--color-charcoal)', marginBottom: '2px' }}>
+                        {lw.holiday.name}
+                      </div>
+                      <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '12px', color: 'var(--color-stone)' }}>
+                        📅 {rangeStr}
+                      </div>
+                    </div>
+                    <span style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '13px', color: '#C4893B', fontWeight: '600' }}>
+                      Plan →
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
+
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
@@ -434,3 +502,4 @@ export default function TripsPage() {
     </div>
   )
 }
+

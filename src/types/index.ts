@@ -17,6 +17,7 @@ export interface UserProfile {
   displayName: string
   email: string
   photoURL: string | null
+  customPhotoURL?: string
   homeLocation: HomeLocation | null
   vehicles: Vehicle[]
   createdAt: Date

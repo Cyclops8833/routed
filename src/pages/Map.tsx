@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import { db } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
+import { db, auth } from '../firebase'
 import { MAPBOX_TOKEN } from '../config'
 import type { UserProfile } from '../types'
 import TripSheet from '../components/TripSheet'
+import QuickPlanSheet from '../components/QuickPlanSheet'
+import { addDestinationDots } from '../utils/mapDestinations'
+import { getSpotlightDestinations, estimateDriveHours } from '../utils/spotlight'
+import type { Destination } from '../data/destinations'
+// Key must match the one exported from Trips.tsx
+const PENDING_DATES_KEY = 'routed-pending-trip-dates'
 
 const MAP_STYLE_TERRAIN = 'mapbox://styles/mapbox/outdoors-v12'
 const MAP_STYLE_SATELLITE = 'mapbox://styles/mapbox/satellite-streets-v12'
@@ -19,6 +26,8 @@ const CREW_COLOURS = [
   '#5B8DB8',
   '#8B6E47',
 ]
+
+const FAB_SEEN_KEY = 'routed-fab-seen'
 
 function getVehicleBadge(type: 'car' | '4wd' | 'motorbike'): string {
   if (type === 'car') return '🚗'
@@ -93,6 +102,94 @@ function buildPopupHTML(member: UserProfile): string {
 }
 
 type SheetMode = 'closed' | 'full' | 'peek'
+type PlanMode = 'picker' | 'quick' | 'manual'
+
+function SpotlightCard({
+  dest,
+  onTap,
+}: {
+  dest: Destination
+  onTap: (dest: Destination) => void
+}) {
+  const driveHrs = estimateDriveHours(dest)
+  const acts = dest.activities.slice(0, 2).map((a) => {
+    if (a === 'camping') return '🏕️'
+    if (a === 'hiking') return '🥾'
+    if (a === 'fishing') return '🎣'
+    if (a === '4wd') return '🚙'
+    return ''
+  })
+
+  return (
+    <button
+      onClick={() => onTap(dest)}
+      style={{
+        width: '180px',
+        minWidth: '180px',
+        height: '100px',
+        borderRadius: '12px',
+        background: 'rgba(255,255,255,0.92)',
+        border: '1px solid rgba(74,103,65,0.2)',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
+        padding: '10px 12px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: '4px',
+        cursor: 'pointer',
+        textAlign: 'left',
+        flexShrink: 0,
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
+        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget
+        el.style.transform = 'translateY(-2px)'
+        el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.18)'
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget
+        el.style.transform = ''
+        el.style.boxShadow = '0 2px 10px rgba(0,0,0,0.12)'
+      }}
+    >
+      <div style={{
+        fontFamily: 'Fraunces, Georgia, serif',
+        fontSize: '13px',
+        fontWeight: '700',
+        color: '#2D2D2D',
+        lineHeight: 1.25,
+        overflow: 'hidden',
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical' as const,
+        maxHeight: '32px',
+      }}>
+        {dest.name}
+      </div>
+      <div style={{
+        fontSize: '10px',
+        fontWeight: '600',
+        background: 'rgba(74,103,65,0.1)',
+        color: '#4A6741',
+        borderRadius: '100px',
+        padding: '1px 6px',
+        fontFamily: 'DM Sans, system-ui, sans-serif',
+      }}>
+        {dest.region}
+      </div>
+      <div style={{
+        fontFamily: 'DM Sans, system-ui, sans-serif',
+        fontSize: '11px',
+        color: '#8C8578',
+        marginTop: '2px',
+      }}>
+        ~{driveHrs}hr drive · {acts.join(' ')}
+      </div>
+    </button>
+  )
+}
 
 export default function MapPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null)
@@ -102,10 +199,52 @@ export default function MapPage() {
   const [crewLoaded, setCrewLoaded] = useState(false)
   const [isSatellite, setIsSatellite] = useState(false)
   const [sheetMode, setSheetMode] = useState<SheetMode>('closed')
+  const [planMode, setPlanMode] = useState<PlanMode>('picker')
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+  const [currentUid, setCurrentUid] = useState<string | null>(null)
+  const [hasTrips, setHasTrips] = useState<boolean | null>(null)
   const dragStartY = useRef<number | null>(null)
   const dragPointerId = useRef<number | null>(null)
   const [dragDelta, setDragDelta] = useState(0)
+  const [fabPulse, setFabPulse] = useState(!localStorage.getItem(FAB_SEEN_KEY))
+  const [coachMarkVisible, setCoachMarkVisible] = useState(!localStorage.getItem(FAB_SEEN_KEY))
+  const [spotlightDests, setSpotlightDests] = useState<Destination[]>([])
+  const coachMarkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Listen for auth to get current uid
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setCurrentUid(user?.uid ?? null)
+    })
+    return unsub
+  }, [])
+
+  // Check if user has any trips
+  useEffect(() => {
+    if (!currentUid) return
+    const q = query(collection(db, 'trips'), where('attendees', 'array-contains', currentUid))
+    getDocs(q).then((snap) => {
+      setHasTrips(snap.size > 0)
+    }).catch(() => setHasTrips(false))
+  }, [currentUid])
+
+  // Load spotlight destinations
+  useEffect(() => {
+    const dests = getSpotlightDestinations()
+    setSpotlightDests(dests)
+  }, [])
+
+  // Auto-dismiss coach mark after 8s
+  useEffect(() => {
+    if (coachMarkVisible) {
+      coachMarkTimer.current = setTimeout(() => {
+        setCoachMarkVisible(false)
+      }, 8000)
+    }
+    return () => {
+      if (coachMarkTimer.current) clearTimeout(coachMarkTimer.current)
+    }
+  }, [coachMarkVisible])
 
   // Initialise map
   useEffect(() => {
@@ -123,6 +262,8 @@ export default function MapPage() {
     map.addControl(new mapboxgl.NavigationControl(), 'top-right')
 
     map.on('load', () => {
+      // Add destination dots BEFORE crew pins
+      addDestinationDots(map, mapboxgl.Popup)
       setMapLoaded(true)
     })
 
@@ -179,7 +320,6 @@ export default function MapPage() {
           markersRef.current.push(marker)
           bounds.extend([member.homeLocation!.lng, member.homeLocation!.lat])
 
-          // Use first member with location as current user proxy (or auth user in a real app)
           if (index === 0) {
             setCurrentUser(member)
           }
@@ -198,6 +338,23 @@ export default function MapPage() {
     loadCrewMarkers()
   }, [mapLoaded])
 
+  // Check for pending trip dates from Trips page
+  useEffect(() => {
+    function checkPendingDates() {
+      try {
+        const stored = localStorage.getItem(PENDING_DATES_KEY)
+        if (stored) {
+          localStorage.removeItem(PENDING_DATES_KEY)
+          setPlanMode('manual')
+          setSheetMode('full')
+        }
+      } catch { /* ignore */ }
+    }
+    checkPendingDates()
+    window.addEventListener('focus', checkPendingDates)
+    return () => window.removeEventListener('focus', checkPendingDates)
+  }, [])
+
   const toggleStyle = () => {
     const map = mapRef.current
     if (!map) return
@@ -208,11 +365,19 @@ export default function MapPage() {
   }
 
   const handlePlanTrip = () => {
+    // Mark FAB as seen
+    if (!localStorage.getItem(FAB_SEEN_KEY)) {
+      localStorage.setItem(FAB_SEEN_KEY, 'true')
+      setFabPulse(false)
+      setCoachMarkVisible(false)
+    }
+    setPlanMode('picker')
     setSheetMode('full')
   }
 
   const handleSheetClose = () => {
     setSheetMode('closed')
+    setPlanMode('picker')
   }
 
   const handleSheetPeek = () => {
@@ -243,7 +408,19 @@ export default function MapPage() {
     }
   }, [])
 
+  const handleSpotlightTap = (dest: Destination) => {
+    const map = mapRef.current
+    if (!map) return
+    map.flyTo({ center: [dest.lng, dest.lat], zoom: 10 })
+  }
+
+  const handleSpotlightShuffle = () => {
+    const newDests = getSpotlightDestinations(true)
+    setSpotlightDests(newDests)
+  }
+
   const isLoading = !mapLoaded || !crewLoaded
+  const sheetVisible = sheetMode !== 'closed'
 
   // Sheet height based on mode
   const sheetHeight =
@@ -252,8 +429,6 @@ export default function MapPage() {
       : sheetMode === 'peek'
       ? '32vh'
       : '0px'
-
-  const sheetVisible = sheetMode !== 'closed'
 
   return (
     <div
@@ -340,48 +515,168 @@ export default function MapPage() {
         {isSatellite ? '🗺 Terrain' : '🛰 Satellite'}
       </button>
 
-      {/* Plan a Trip FAB — hidden when sheet is open */}
+      {/* Empty state — shown when no trips and map is loaded */}
+      {!isLoading && hasTrips === false && !sheetVisible && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '40%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 10,
+            background: 'rgba(255,255,255,0.9)',
+            borderRadius: '16px',
+            padding: '20px 24px',
+            maxWidth: '260px',
+            textAlign: 'center',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+          }}
+        >
+          <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '20px', fontWeight: '700', color: 'var(--color-charcoal)', marginBottom: '8px' }}>
+            Your crew's on the map.
+          </div>
+          <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: 'var(--color-stone)' }}>
+            Tap 'Plan a Trip' to get moving.
+          </div>
+        </div>
+      )}
+
+      {/* Spotlight row — above FAB, hidden when sheet open */}
+      {!sheetVisible && spotlightDests.length > 0 && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 'calc(var(--tab-bar-height) + env(safe-area-inset-bottom) + 76px)',
+            left: 0,
+            right: 0,
+            zIndex: 15,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0,
+          }}
+        >
+          <div className="spotlight-row" style={{ flex: 1 }}>
+            {spotlightDests.map((dest) => (
+              <SpotlightCard key={dest.id} dest={dest} onTap={handleSpotlightTap} />
+            ))}
+          </div>
+          <button
+            onClick={handleSpotlightShuffle}
+            style={{
+              flexShrink: 0,
+              marginRight: '12px',
+              padding: '6px 10px',
+              borderRadius: '100px',
+              background: 'rgba(255,255,255,0.9)',
+              border: '1px solid rgba(74,103,65,0.25)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+              cursor: 'pointer',
+              fontFamily: 'DM Sans, system-ui, sans-serif',
+              fontSize: '12px',
+              fontWeight: '600',
+              color: '#4A6741',
+              whiteSpace: 'nowrap',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+            }}
+          >
+            ↺ Shuffle
+          </button>
+        </div>
+      )}
+
+      {/* Coach mark tooltip — shown on first use */}
+      {coachMarkVisible && hasTrips === false && !sheetVisible && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 'calc(var(--tab-bar-height) + env(safe-area-inset-bottom) + 76px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 25,
+            background: 'var(--color-charcoal)',
+            color: '#FAFAF7',
+            borderRadius: '8px',
+            padding: '8px 14px',
+            fontSize: '13px',
+            fontFamily: 'DM Sans, system-ui, sans-serif',
+            fontWeight: '500',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+          }}
+        >
+          Tap here to plan your first trip →
+          {/* Triangle pointing down at FAB */}
+          <div style={{
+            position: 'absolute',
+            bottom: '-6px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 0,
+            height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: '6px solid var(--color-charcoal)',
+          }} />
+        </div>
+      )}
+
+      {/* Plan a Trip FAB — pill shaped, centred, hidden when sheet open */}
       <button
         onClick={handlePlanTrip}
         aria-label="Plan a Trip"
+        className={fabPulse ? 'fab-pulse' : ''}
         style={{
           position: 'fixed',
           bottom: 'calc(var(--tab-bar-height) + env(safe-area-inset-bottom) + 16px)',
-          right: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
           zIndex: 20,
-          width: '56px',
-          height: '56px',
-          borderRadius: '50%',
+          height: '48px',
+          paddingLeft: '20px',
+          paddingRight: '24px',
+          borderRadius: '24px',
           backgroundColor: '#4A6741',
           border: 'none',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: '8px',
           boxShadow: '0 4px 16px rgba(74, 103, 65, 0.4)',
-          transition: 'transform 0.15s ease, box-shadow 0.15s ease, visibility 0s',
+          transition: fabPulse ? 'none' : 'transform 0.15s ease, box-shadow 0.15s ease',
           visibility: sheetVisible ? 'hidden' : 'visible',
+          whiteSpace: 'nowrap',
         }}
         onMouseEnter={(e) => {
-          const btn = e.currentTarget as HTMLButtonElement
-          btn.style.transform = 'scale(1.05)'
-          btn.style.boxShadow = '0 6px 20px rgba(74, 103, 65, 0.5)'
+          if (!fabPulse) {
+            const btn = e.currentTarget as HTMLButtonElement
+            btn.style.transform = 'translateX(-50%) scale(1.04)'
+            btn.style.boxShadow = '0 6px 20px rgba(74, 103, 65, 0.5)'
+          }
         }}
         onMouseLeave={(e) => {
-          const btn = e.currentTarget as HTMLButtonElement
-          btn.style.transform = ''
-          btn.style.boxShadow = '0 4px 16px rgba(74, 103, 65, 0.4)'
-        }}
-        onMouseDown={(e) => {
-          ;(e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.96)'
-        }}
-        onMouseUp={(e) => {
-          ;(e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.05)'
+          if (!fabPulse) {
+            const btn = e.currentTarget as HTMLButtonElement
+            btn.style.transform = 'translateX(-50%)'
+            btn.style.boxShadow = '0 4px 16px rgba(74, 103, 65, 0.4)'
+          }
         }}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="3" strokeLinecap="round" />
         </svg>
+        <span style={{
+          fontFamily: 'DM Sans, system-ui, sans-serif',
+          fontSize: '14px',
+          fontWeight: '600',
+          color: 'white',
+        }}>
+          Plan a Trip
+        </span>
       </button>
 
       {/* Bottom Sheet */}
@@ -403,7 +698,7 @@ export default function MapPage() {
           cursor: sheetMode === 'peek' ? 'pointer' : 'default',
         }}
       >
-        {sheetVisible && (
+        {sheetVisible && planMode === 'manual' && (
           <TripSheet
             mapRef={mapRef}
             currentUser={currentUser}
@@ -413,6 +708,121 @@ export default function MapPage() {
             onDragHandlePointerMove={handleDragHandlePointerMove}
             onDragHandlePointerUp={handleDragHandlePointerUp}
           />
+        )}
+        {sheetVisible && planMode !== 'manual' && (
+          <>
+            {/* Drag handle */}
+            <div
+              onPointerDown={handleDragHandlePointerDown}
+              onPointerMove={handleDragHandlePointerMove}
+              onPointerUp={handleDragHandlePointerUp}
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                paddingTop: '10px',
+                paddingBottom: '4px',
+                cursor: 'grab',
+                touchAction: 'none',
+                userSelect: 'none',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 2,
+              }}
+            >
+              <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'var(--color-stone)', opacity: 0.4 }} />
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={handleSheetClose}
+              aria-label="Close"
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '16px',
+                zIndex: 3,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--color-stone)',
+                fontSize: '22px',
+                lineHeight: 1,
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              ×
+            </button>
+
+            {/* Sheet content — scrollable */}
+            <div style={{ height: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingTop: '24px' }}>
+              {planMode === 'quick' ? (
+                <QuickPlanSheet
+                  mapRef={mapRef}
+                  currentUser={currentUser}
+                  onClose={handleSheetClose}
+                  onSwitchToManual={() => setPlanMode('manual')}
+                />
+              ) : (
+                /* Plan mode picker */
+                <div style={{ padding: '8px 20px 20px' }}>
+                  <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '22px', fontWeight: '700', color: 'var(--color-charcoal)', margin: '0 0 20px' }}>
+                    Plan a Trip
+                  </h2>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                    {([
+                      { key: 'quick' as PlanMode, icon: '⚡', title: 'Quick Plan', sub: '4 taps to your next adventure' },
+                      { key: 'manual' as PlanMode, icon: '⚙️', title: 'Manual', sub: 'Full control over every detail' },
+                    ]).map((opt) => (
+                      <button
+                        key={opt.key}
+                        onClick={() => setPlanMode(opt.key)}
+                        style={{
+                          flex: 1,
+                          height: '140px',
+                          borderRadius: '16px',
+                          border: '1.5px solid var(--color-border)',
+                          background: 'var(--color-surface)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          padding: '16px',
+                          transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          const el = e.currentTarget
+                          el.style.borderColor = '#4A6741'
+                          el.style.background = 'rgba(74,103,65,0.04)'
+                        }}
+                        onMouseLeave={(e) => {
+                          const el = e.currentTarget
+                          el.style.borderColor = 'var(--color-border)'
+                          el.style.background = 'var(--color-surface)'
+                        }}
+                      >
+                        <span style={{ fontSize: '28px' }}>{opt.icon}</span>
+                        <span style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '16px', fontWeight: '700', color: 'var(--color-charcoal)' }}>{opt.title}</span>
+                        <span style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '12px', color: 'var(--color-stone)', textAlign: 'center' }}>{opt.sub}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setPlanMode('manual')}
+                    style={{ background: 'none', border: 'none', color: '#4A6741', fontSize: '14px', fontWeight: '600', fontFamily: 'DM Sans, system-ui, sans-serif', cursor: 'pointer', padding: '4px 0' }}
+                  >
+                    Or browse all destinations →
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
 
