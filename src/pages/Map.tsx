@@ -46,7 +46,8 @@ function createMarkerElement(member: UserProfile, colour: string): HTMLDivElemen
 
   const el = document.createElement('div')
   el.style.cssText = `
-    position: relative;
+    position: absolute;
+    transform: translate(-50%, -50%);
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -405,7 +406,7 @@ export default function MapPage() {
           const popup = new mapboxgl.Popup({ offset: 20, maxWidth: '220px' }).setHTML(
             buildPopupHTML(member)
           )
-          const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+          const marker = new mapboxgl.Marker({ element: el })
             .setLngLat([member.homeLocation!.lng, member.homeLocation!.lat])
             .setPopup(popup)
             .addTo(map!)
