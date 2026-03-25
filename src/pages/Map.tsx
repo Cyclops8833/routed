@@ -405,7 +405,7 @@ export default function MapPage() {
           const popup = new mapboxgl.Popup({ offset: 20, maxWidth: '220px' }).setHTML(
             buildPopupHTML(member)
           )
-          const marker = new mapboxgl.Marker({ element: el })
+          const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
             .setLngLat([member.homeLocation!.lng, member.homeLocation!.lat])
             .setPopup(popup)
             .addTo(map!)
