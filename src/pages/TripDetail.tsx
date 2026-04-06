@@ -257,9 +257,16 @@ export default function TripDetailPage() {
 
   const nights = trip ? nightsFromDateRange(trip.dateRange) : 1
 
-  // Build distancesKm from attendee profiles (we don't have routes here — use 0 as placeholder)
-  // In a real integration you'd store routes in Firestore; for now fuel shows as $0 if no distance data
-  const distancesKm: Record<string, number> = {}
+  // Build distancesKm from each attendee's driveCache for the confirmed destination.
+  // Attendees with no cache entry for this destination fall back to 0 (per D-02).
+  const distancesKm: Record<string, number> = trip?.confirmedDestinationId
+    ? Object.fromEntries(
+        attendeeProfiles.map((profile) => [
+          profile.uid,
+          profile.driveCache?.[trip.confirmedDestinationId!]?.distanceKm ?? 0,
+        ])
+      )
+    : {}
 
   const breakdown: CostBreakdownData | null =
     confirmedDestination && attendeeProfiles.length > 0
