@@ -28,7 +28,7 @@ function GoogleIcon() {
   )
 }
 
-export default function Landing() {
+export default function Landing({ authError }: { authError?: string | null }) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -150,7 +150,7 @@ export default function Landing() {
         </button>
 
         {/* Error */}
-        {error && (
+        {(error || authError) && (
           <p
             style={{
               color: 'var(--color-terracotta)',
@@ -159,7 +159,7 @@ export default function Landing() {
               textAlign: 'center',
             }}
           >
-            {error}
+            {error || authError}
           </p>
         )}
 

@@ -8,10 +8,18 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
     // Complete any pending redirect sign-in (mobile OAuth flow)
-    getRedirectResult(auth).catch(() => {})
+    getRedirectResult(auth).catch((err) => {
+      const e = err as { code?: string }
+      // auth/no-current-user fires on every load when no redirect was pending — ignore it
+      if (e.code && e.code !== 'auth/no-current-user') {
+        console.error('Redirect sign-in error:', err)
+        setAuthError('Sign-in failed. Please try again.')
+      }
+    })
 
     return onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
@@ -30,5 +38,5 @@ export function useAuth() {
     })
   }, [])
 
-  return { user, profile, loading }
+  return { user, profile, loading, authError }
 }

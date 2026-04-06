@@ -45,11 +45,11 @@ function LoadingScreen() {
 }
 
 function AppContent() {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, authError } = useAuth()
 
   if (loading) return <LoadingScreen />
 
-  if (!user) return <Landing />
+  if (!user) return <Landing authError={authError} />
 
   if (!profile || !profile.onboardingComplete) {
     return <Onboarding user={user} existingProfile={profile} />
