@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { RefObject } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
 import type { RankedDestination } from '../utils/rankDestinations'
@@ -76,6 +77,7 @@ export default function DestinationCard({
   allMembers = [],
 }: DestinationCardProps) {
   const { destination: dest, routes, estimatedCostPerPerson, overBudget } = ranked
+  const [imgError, setImgError] = useState(false)
 
   // Build distancesKm map for mini cost preview
   const distancesKm: Record<string, number> = {}
@@ -170,6 +172,29 @@ export default function DestinationCard({
 
   return (
     <div className="card-animate" style={cardStyle}>
+
+      {dest.photos && dest.photos[0] && !imgError ? (
+        <img
+          src={dest.photos[0]}
+          alt={dest.name}
+          loading="lazy"
+          onError={() => setImgError(true)}
+          style={{
+            width: '100%',
+            aspectRatio: '3 / 2',
+            objectFit: 'cover',
+            display: 'block',
+          }}
+        />
+      ) : (
+        <div
+          className="topo-bg"
+          style={{
+            width: '100%',
+            aspectRatio: '3 / 2',
+          }}
+        />
+      )}
 
       <div style={{ padding: '16px' }}>
         {/* Header row */}
