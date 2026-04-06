@@ -34,8 +34,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Add photos field to Destination interface and curate Unsplash URLs for all 70 destinations
-- [ ] 03-02-PLAN.md — Display hero image in Mapbox popup and DestinationCard with fallback
+- [x] 03-01-PLAN.md — Add photos field to Destination interface and curate Unsplash URLs for all 70 destinations
+- [x] 03-02-PLAN.md — Display hero image in Mapbox popup and DestinationCard with fallback
 
 ---
 
