@@ -34,8 +34,6 @@ const CREW_COLOURS = [
   '#8B6E47',
 ]
 
-const today = new Date().toISOString().split('T')[0]
-
 function calcNights(start: string, end: string): number {
   if (!start || !end) return 2
   const s = new Date(start).getTime()
@@ -44,6 +42,7 @@ function calcNights(start: string, end: string): number {
 }
 
 export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDragHandlePointerDown, onDragHandlePointerMove, onDragHandlePointerUp, pendingDestinationId, onPendingDestConsumed }: TripSheetProps) {
+  const today = new Date().toISOString().split('T')[0]
   const navigate = useNavigate()
 
   // Form state
@@ -419,6 +418,7 @@ function FormView({
   isRanking,
   rankError,
 }: FormViewProps) {
+  const today = new Date().toISOString().split('T')[0]
   const labelStyle: React.CSSProperties = {
     display: 'block',
     fontSize: '13px',
