@@ -5,7 +5,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { onAuthStateChanged } from 'firebase/auth'
 import { db, auth } from '../firebase'
 import { MAPBOX_TOKEN } from '../config'
-import type { UserProfile } from '../types'
+import type { UserProfile, HomeLocation } from '../types'
 import TripSheet from '../components/TripSheet'
 import QuickPlanSheet from '../components/QuickPlanSheet'
 import DirectTripSheet from '../components/DirectTripSheet'
@@ -13,6 +13,7 @@ import { addDestinationDots } from '../utils/mapDestinations'
 import { getSpotlightDestinations } from '../utils/spotlight'
 import { isCacheValid, buildDriveCache, saveDriveCache, formatDriveTime } from '../utils/driveCache'
 import type { DriveCache } from '../types'
+import { destinations } from '../data/destinations'
 import type { Destination } from '../data/destinations'
 import TopoPattern from '../components/TopoPattern'
 // Key must match the one exported from Trips.tsx
@@ -113,17 +114,19 @@ type PlanMode = 'picker' | 'quick' | 'manual' | 'destination'
 function SpotlightCard({
   dest,
   driveCache,
+  userHomeLocation,
   onTap,
 }: {
   dest: Destination
   driveCache: DriveCache | null
+  userHomeLocation: HomeLocation | null
   onTap: (dest: Destination) => void
 }) {
   const cached = driveCache?.[dest.id]
   const driveLabel = cached
     ? `${formatDriveTime(cached.durationMinutes)} from you`
     : `~${Math.round((() => {
-        const R = 6371, lat1 = -37.0, lng1 = 144.5
+        const R = 6371, lat1 = userHomeLocation?.lat ?? -37.0, lng1 = userHomeLocation?.lng ?? 144.5
         const dLat = ((dest.lat - lat1) * Math.PI) / 180
         const dLng = ((dest.lng - lng1) * Math.PI) / 180
         const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(dest.lat*Math.PI/180)*Math.sin(dLng/2)**2
@@ -438,7 +441,7 @@ export default function MapPage() {
       }
 
       // Cache missing/stale — build it
-      setCacheProgress({ done: 0, total: 70 })
+      setCacheProgress({ done: 0, total: destinations.length })
       try {
         const cache = await buildDriveCache(loc.lat, loc.lng, (done, total) => {
           setCacheProgress({ done, total })
@@ -905,7 +908,7 @@ export default function MapPage() {
         >
           <div className="spotlight-row" style={{ flex: 1 }}>
             {spotlightDests.map((dest) => (
-              <SpotlightCard key={dest.id} dest={dest} driveCache={driveCache} onTap={handleSpotlightTap} />
+              <SpotlightCard key={dest.id} dest={dest} driveCache={driveCache} userHomeLocation={currentUser?.homeLocation ?? null} onTap={handleSpotlightTap} />
             ))}
           </div>
           <button
