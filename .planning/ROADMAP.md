@@ -22,7 +22,11 @@ Plans:
 **Goal:** Fix the four user-visible bugs identified in the GSD codebase audit: fuel cost showing $0 in TripDetail (distances never fetched), drive time estimate using hardcoded central-Vic coordinates as fallback, TripSheet "today" date going stale past midnight, and drive cache total hardcoded at 70 rather than derived from destinations array length.
 **Requirements**: BUG-FUEL, BUG-COORDS, BUG-DATE, BUG-CACHE
 **Depends on:** Phase 1
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — BUG-FUEL (distancesKm from driveCache in TripDetail) + BUG-DATE (today moved into TripSheet function body)
+- [ ] 02-02-PLAN.md — BUG-COORDS (SpotlightCard userHomeLocation prop) + BUG-CACHE (destinations.length replaces hardcoded 70)
 
 ---
 
