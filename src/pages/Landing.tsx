@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { signInWithPopup } from 'firebase/auth'
+import { signInWithPopup, signInWithRedirect } from 'firebase/auth'
 import { auth, googleProvider } from '../firebase'
 import TopoPattern from '../components/TopoPattern'
+
+const isMobile = /Mobi|Android/i.test(navigator.userAgent)
 
 function GoogleIcon() {
   return (
@@ -34,6 +36,11 @@ export default function Landing() {
     setError(null)
     setLoading(true)
     try {
+      if (isMobile) {
+        await signInWithRedirect(auth, googleProvider)
+        // Page will redirect; loading state stays true
+        return
+      }
       await signInWithPopup(auth, googleProvider)
     } catch (err) {
       const e = err as { code?: string; message?: string }

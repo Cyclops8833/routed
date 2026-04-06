@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { onAuthStateChanged, User } from 'firebase/auth'
+import { onAuthStateChanged, getRedirectResult, User } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { UserProfile } from '../types'
@@ -10,6 +10,9 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Complete any pending redirect sign-in (mobile OAuth flow)
+    getRedirectResult(auth).catch(() => {})
+
     return onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
       if (firebaseUser) {
