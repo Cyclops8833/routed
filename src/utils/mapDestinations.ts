@@ -101,8 +101,13 @@ function buildPopupHtml(
     ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(140,133,120,0.2);font-size:11px;color:#8C8578;font-style:italic;line-height:1.5;">${dest.crewNotes}</div>`
     : ''
 
+  const photoHtml = dest.photos && dest.photos[0]
+    ? `<img src="${dest.photos[0]}" alt="${dest.name}" onerror="this.style.display='none'" style="width:100%;height:150px;object-fit:cover;display:block;border-radius:4px 4px 0 0;margin-bottom:10px;" />`
+    : ''
+
   return `
     <div style="font-family:'DM Sans',system-ui,sans-serif;width:300px;max-width:90vw;">
+      ${photoHtml}
       <div style="font-family:'Fraunces',Georgia,serif;font-size:17px;font-weight:700;color:#2D2D2D;margin-bottom:6px;line-height:1.2;">${dest.name}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
         <span style="font-size:11px;font-weight:600;background:rgba(74,103,65,0.1);color:#4A6741;border-radius:100px;padding:2px 8px;">${dest.region}</span>
