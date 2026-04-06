@@ -12,7 +12,7 @@
 **Plans:** 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Compact attribution (i) icon
+- [x] 01-01-PLAN.md — Compact attribution (i) icon
 - [ ] 01-02-PLAN.md — 3D terrain, tilt, and Topo/Satellite style pill controls
 
 ---
