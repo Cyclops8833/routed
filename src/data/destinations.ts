@@ -43,6 +43,7 @@ export interface Destination {
   fishSpecies: string[];
   tags: string[];
   bookingInfo: BookingInfo;
+  photos: string[];
 }
 
 export const destinations: Destination[] = [
