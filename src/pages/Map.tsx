@@ -287,9 +287,11 @@ export default function MapPage() {
       style: MAP_STYLE_TERRAIN,
       center: [133.7751, -25.2744], // Australia
       zoom: 4,
+      attributionControl: false,
     })
 
     map.addControl(new mapboxgl.NavigationControl(), 'top-right')
+    map.addControl(new mapboxgl.AttributionControl({ compact: true }))
 
     map.on('load', () => {
       // Add destination dots BEFORE crew pins
