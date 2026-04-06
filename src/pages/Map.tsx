@@ -908,10 +908,9 @@ export default function MapPage() {
               <SpotlightCard key={dest.id} dest={dest} driveCache={driveCache} onTap={handleSpotlightTap} />
             ))}
           </div>
-          {/* Desktop labelled shuffle button */}
           <button
             onClick={handleSpotlightShuffle}
-            className="shuffle-btn-label"
+            aria-label="Shuffle destinations"
             style={{
               flexShrink: 0,
               marginRight: '12px',
@@ -931,32 +930,6 @@ export default function MapPage() {
             }}
           >
             ↺ Shuffle
-          </button>
-          {/* Mobile icon-only shuffle button */}
-          <button
-            onClick={handleSpotlightShuffle}
-            aria-label="Shuffle destinations"
-            className="shuffle-btn-icon"
-            style={{
-              flexShrink: 0,
-              marginRight: '12px',
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.9)',
-              border: '1px solid rgba(74,103,65,0.25)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#4A6741',
-              fontSize: '18px',
-              backdropFilter: 'blur(4px)',
-              WebkitBackdropFilter: 'blur(4px)',
-            }}
-          >
-            ↺
           </button>
         </div>
       )}
