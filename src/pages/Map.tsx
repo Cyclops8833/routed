@@ -312,7 +312,6 @@ export default function MapPage() {
       attributionControl: false,
     })
 
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right')
     map.addControl(new mapboxgl.AttributionControl({ compact: true }))
 
     map.on('load', () => {
@@ -340,8 +339,22 @@ export default function MapPage() {
         setMapPitch(map.getPitch())
       })
 
-      // Re-apply terrain after style swap (setStyle wipes custom sources)
+      // Re-apply dots + terrain after style swap (setStyle wipes all custom sources/layers)
       map.on('style.load', () => {
+        addDestinationDots(map, mapboxgl.Popup, {
+          getShortlists: () => shortlistsRef.current,
+          getMembers: () => crewMembersRef.current,
+          onPlanTrip: (destinationId) => {
+            if (planModeRef.current === 'manual' || planModeRef.current === 'quick') {
+              setPendingDestForPlanning(destinationId)
+              setSheetMode('full')
+            } else {
+              setPreselectDestId(destinationId)
+              setSheetMode('full')
+              setPlanMode('destination')
+            }
+          },
+        })
         if (isTerrainRef.current) {
           applyTerrain(map)
           // Re-add sky layer
@@ -716,13 +729,13 @@ export default function MapPage() {
         }}
       />
 
-      {/* === Map controls — top right, below NavigationControl === */}
+      {/* === Map controls — top right === */}
 
       {/* Topo / Satellite style pill */}
       <div
         style={{
           position: 'absolute',
-          top: '106px',
+          top: '10px',
           right: '10px',
           zIndex: 10,
           display: 'flex',
@@ -777,7 +790,7 @@ export default function MapPage() {
         aria-pressed={isTerrain}
         style={{
           position: 'absolute',
-          top: '178px',
+          top: '82px',
           right: '10px',
           zIndex: 10,
           padding: '6px 12px',
@@ -804,7 +817,7 @@ export default function MapPage() {
         aria-pressed={mapPitch > 5}
         style={{
           position: 'absolute',
-          top: '218px',
+          top: '122px',
           right: '10px',
           zIndex: 10,
           padding: '6px 12px',
