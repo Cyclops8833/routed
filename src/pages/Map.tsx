@@ -215,6 +215,9 @@ export default function MapPage() {
   const [mapLoaded, setMapLoaded] = useState(false)
   const [crewLoaded, setCrewLoaded] = useState(false)
   const [isSatellite, setIsSatellite] = useState(false)
+  const [isTerrain, setIsTerrain] = useState(false)
+  const [mapPitch, setMapPitch] = useState(0)
+  const isTerrainRef = useRef(false)
   const [sheetMode, setSheetMode] = useState<SheetMode>('closed')
   const [planMode, setPlanMode] = useState<PlanMode>('picker')
   const [preselectDestId, setPreselectDestId] = useState<string | null>(null)
@@ -240,6 +243,9 @@ export default function MapPage() {
 
   // Keep planModeRef in sync so Mapbox popup closures always read latest value
   useEffect(() => { planModeRef.current = planMode }, [planMode])
+
+  // Keep isTerrainRef in sync so style.load closure reads latest value
+  useEffect(() => { isTerrainRef.current = isTerrain }, [isTerrain])
 
   // Listen for auth to get current uid
   useEffect(() => {
@@ -275,6 +281,22 @@ export default function MapPage() {
       if (coachMarkTimer.current) clearTimeout(coachMarkTimer.current)
     }
   }, [coachMarkVisible])
+
+  const applyTerrain = useCallback((map: mapboxgl.Map) => {
+    if (!map.getSource('mapbox-dem')) {
+      map.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14,
+      })
+    }
+    map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 })
+  }, [])
+
+  const removeTerrain = useCallback((map: mapboxgl.Map) => {
+    map.setTerrain(null)
+  }, [])
 
   // Initialise map
   useEffect(() => {
@@ -312,6 +334,32 @@ export default function MapPage() {
         },
       })
       setMapLoaded(true)
+
+      // Track pitch changes for tilt button active state
+      map.on('pitch', () => {
+        setMapPitch(map.getPitch())
+      })
+
+      // Re-apply terrain after style swap (setStyle wipes custom sources)
+      map.on('style.load', () => {
+        if (isTerrainRef.current) {
+          applyTerrain(map)
+          // Re-add sky layer
+          if (!map.getLayer('sky-layer')) {
+            map.addLayer({
+              id: 'sky-layer',
+              type: 'sky',
+              paint: {
+                'sky-type': 'atmosphere',
+                'sky-atmosphere-sun-intensity': 5,
+                'sky-atmosphere-sun': [0, 80],
+                'sky-atmosphere-color': '#78b4e0',
+                'sky-atmosphere-halo-color': '#e0d8c8',
+              },
+            } as mapboxgl.AnyLayer)
+          }
+        }
+      })
     })
 
     mapRef.current = map
@@ -321,6 +369,32 @@ export default function MapPage() {
       mapRef.current = null
     }
   }, [])
+
+  // Apply/remove 3D terrain when toggle changes
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapLoaded) return
+    if (isTerrain) {
+      applyTerrain(map)
+      // Add static daytime sky layer for atmosphere
+      if (!map.getLayer('sky-layer')) {
+        map.addLayer({
+          id: 'sky-layer',
+          type: 'sky',
+          paint: {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun-intensity': 5,
+            'sky-atmosphere-sun': [0, 80],
+            'sky-atmosphere-color': '#78b4e0',
+            'sky-atmosphere-halo-color': '#e0d8c8',
+          },
+        } as mapboxgl.AnyLayer)
+      }
+    } else {
+      removeTerrain(map)
+      if (map.getLayer('sky-layer')) map.removeLayer('sky-layer')
+    }
+  }, [isTerrain, mapLoaded, applyTerrain, removeTerrain])
 
   // Subscribe to shortlists so popup always has fresh data
   useEffect(() => {
@@ -458,6 +532,10 @@ export default function MapPage() {
     const newSatellite = !isSatellite
     setIsSatellite(newSatellite)
     map.setStyle(newSatellite ? MAP_STYLE_SATELLITE : MAP_STYLE_TERRAIN)
+  }
+
+  const handleTiltToggle = () => {
+    mapRef.current?.easeTo({ pitch: mapPitch > 5 ? 0 : 60, duration: 400 })
   }
 
   const handlePlanTrip = () => {
@@ -638,37 +716,113 @@ export default function MapPage() {
         }}
       />
 
-      {/* Satellite/Terrain toggle — top right, below navigation controls */}
-      <button
-        onClick={toggleStyle}
+      {/* === Map controls — top right, below NavigationControl === */}
+
+      {/* Topo / Satellite style pill */}
+      <div
         style={{
           position: 'absolute',
           top: '106px',
           right: '10px',
           zIndex: 10,
-          background: 'rgba(30, 30, 28, 0.75)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '100px',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+          border: '1px solid rgba(255,255,255,0.15)',
+        }}
+      >
+        <button
+          onClick={() => { if (isSatellite) toggleStyle() }}
+          aria-pressed={!isSatellite}
+          style={{
+            padding: '8px 14px',
+            fontSize: '12px',
+            fontFamily: 'DM Sans, system-ui, sans-serif',
+            fontWeight: '600',
+            background: !isSatellite ? '#4A6741' : 'rgba(30,30,28,0.75)',
+            color: 'white',
+            border: 'none',
+            cursor: isSatellite ? 'pointer' : 'default',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+          }}
+        >
+          Topo
+        </button>
+        <button
+          onClick={() => { if (!isSatellite) toggleStyle() }}
+          aria-pressed={isSatellite}
+          style={{
+            padding: '8px 14px',
+            fontSize: '12px',
+            fontFamily: 'DM Sans, system-ui, sans-serif',
+            fontWeight: '600',
+            background: isSatellite ? '#4A6741' : 'rgba(30,30,28,0.75)',
+            color: 'white',
+            border: 'none',
+            cursor: !isSatellite ? 'pointer' : 'default',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+          }}
+        >
+          Sat
+        </button>
+      </div>
+
+      {/* 3D Terrain toggle */}
+      <button
+        onClick={() => setIsTerrain((prev) => !prev)}
+        aria-pressed={isTerrain}
+        style={{
+          position: 'absolute',
+          top: '178px',
+          right: '10px',
+          zIndex: 10,
           padding: '6px 12px',
           fontSize: '12px',
           fontFamily: 'DM Sans, system-ui, sans-serif',
-          fontWeight: '500',
+          fontWeight: '600',
+          background: isTerrain ? '#4A6741' : 'rgba(30,30,28,0.75)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
           cursor: 'pointer',
           backdropFilter: 'blur(4px)',
           WebkitBackdropFilter: 'blur(4px)',
-          whiteSpace: 'nowrap',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
           transition: 'background 0.15s ease',
         }}
-        onMouseEnter={(e) => {
-          ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(30, 30, 28, 0.9)'
-        }}
-        onMouseLeave={(e) => {
-          ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(30, 30, 28, 0.75)'
+      >
+        3D
+      </button>
+
+      {/* Tilt / pitch toggle */}
+      <button
+        onClick={handleTiltToggle}
+        aria-pressed={mapPitch > 5}
+        style={{
+          position: 'absolute',
+          top: '218px',
+          right: '10px',
+          zIndex: 10,
+          padding: '6px 12px',
+          fontSize: '12px',
+          fontFamily: 'DM Sans, system-ui, sans-serif',
+          fontWeight: '600',
+          background: mapPitch > 5 ? '#4A6741' : 'rgba(30,30,28,0.75)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+          transition: 'background 0.15s ease',
         }}
       >
-        {isSatellite ? '🗺 Terrain' : '🛰 Satellite'}
+        Tilt
       </button>
 
       {/* Welcome card — shown on first visit, dismissable */}
