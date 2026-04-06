@@ -28,10 +28,14 @@ Plans:
 
 ### Phase 3: Destination photos
 
-**Goal:** Add at least one photo per destination — add a `photos` field (array of URLs) to each destination in `src/data/destinations.ts`, source one hero image per destination (Unsplash/Wikimedia or bundled assets), display the hero image in the Mapbox popup and in DestinationCard. No new backend required — URLs bundled with destination data.
+**Goal:** Add at least one photo per destination — add a `photos` field (array of URLs) to each destination in `src/data/destinations.ts`, source one hero image per destination (Unsplash CDN), display the hero image in the Mapbox popup and in DestinationCard. No new backend required — URLs bundled with destination data.
 **Requirements**: PHOTO-DATA, PHOTO-POPUP, PHOTO-CARD
 **Depends on:** Phase 2
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Add photos field to Destination interface and curate Unsplash URLs for all 70 destinations
+- [ ] 03-02-PLAN.md — Display hero image in Mapbox popup and DestinationCard with fallback
 
 ---
 
