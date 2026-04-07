@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { collection, getDocs, getDoc, doc, query, where, onSnapshot } from 'firebase/firestore'
+import { useCrewContext } from '../contexts/CrewContext'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -114,8 +115,10 @@ function buildPopupHTML(member: UserProfile): string {
 type SheetMode = 'closed' | 'full' | 'peek'
 type PlanMode = 'picker' | 'quick' | 'manual' | 'destination'
 
+
 export default function MapPage() {
   const location = useLocation()
+  const { allUsers } = useCrewContext()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const markersRef = useRef<mapboxgl.Marker[]>([])
@@ -352,14 +355,13 @@ export default function MapPage() {
         return
       }
 
-      // Cache missing, stale, or partial — build/resume it
-      // Only reuse existing cache entries if the home location hasn't changed (D-15 threat guard)
-      const locationMatch =
+      // Cache missing/stale/partial — build or resume it
+      const existingCache =
         profile.driveCacheLocation &&
         Math.abs(profile.driveCacheLocation.lat - loc.lat) < 0.001 &&
         Math.abs(profile.driveCacheLocation.lng - loc.lng) < 0.001
-      const existingCache = locationMatch ? profile.driveCache : undefined
-
+          ? profile.driveCache
+          : undefined
       setCacheProgress({ done: 0, total: destinations.length })
       try {
         const cache = await buildDriveCache(
@@ -371,7 +373,6 @@ export default function MapPage() {
             setCacheProgress({ done, total })
           }
         )
-        // No separate saveDriveCache call needed — buildDriveCache saves incrementally.
         setDriveCache(cache)
       } catch (err) {
         console.error('Drive cache build failed:', err)
@@ -383,67 +384,58 @@ export default function MapPage() {
     checkAndBuildCache()
   }, [currentUid])
 
-  // Load crew and place markers once map is loaded
+  // Keep crewMembersRef in sync with context so Mapbox popup closures always read latest
   useEffect(() => {
-    if (!mapLoaded) return
+    crewMembersRef.current = allUsers
+  }, [allUsers])
+
+  // Place crew markers once map is loaded and allUsers has data
+  useEffect(() => {
+    if (!mapLoaded || allUsers.length === 0) return
 
     const map = mapRef.current
     if (!map) return
 
-    async function loadCrewMarkers() {
-      try {
-        const snap = await getDocs(collection(db, 'users'))
-        const profiles = snap.docs
-          .map((d) => d.data() as UserProfile)
-          .sort((a, b) => a.uid.localeCompare(b.uid))
+    const profiles = [...allUsers].sort((a, b) => a.uid.localeCompare(b.uid))
 
-        // Store for popup use
-        crewMembersRef.current = profiles
+    const membersWithLocation = profiles.filter(
+      (p) => p.homeLocation && typeof p.homeLocation.lat === 'number' && typeof p.homeLocation.lng === 'number'
+    )
 
-        const membersWithLocation = profiles.filter(
-          (p) => p.homeLocation && typeof p.homeLocation.lat === 'number' && typeof p.homeLocation.lng === 'number'
-        )
+    // Clear existing markers
+    for (const marker of markersRef.current) {
+      marker.remove()
+    }
+    markersRef.current = []
 
-        // Clear existing markers
-        for (const marker of markersRef.current) {
-          marker.remove()
-        }
-        markersRef.current = []
-
-        if (membersWithLocation.length === 0) {
-          setCrewLoaded(true)
-          return
-        }
-
-        const bounds = new mapboxgl.LngLatBounds()
-
-        membersWithLocation.forEach((member, index) => {
-          const colour = CREW_COLOURS[index % CREW_COLOURS.length]
-          const el = createMarkerElement(member, colour)
-          const popup = new mapboxgl.Popup({ offset: 20, maxWidth: '220px' }).setHTML(
-            buildPopupHTML(member)
-          )
-          const marker = new mapboxgl.Marker({ element: el })
-            .setLngLat([member.homeLocation!.lng, member.homeLocation!.lat])
-            .setPopup(popup)
-            .addTo(map!)
-
-          markersRef.current.push(marker)
-          bounds.extend([member.homeLocation!.lng, member.homeLocation!.lat])
-        })
-
-        if (membersWithLocation.length > 0) {
-          map!.fitBounds(bounds, { padding: 80, maxZoom: 10 })
-        }
-      } catch (err) {
-        console.error('Failed to load crew markers:', err)
-      } finally {
-        setCrewLoaded(true)
-      }
+    if (membersWithLocation.length === 0) {
+      setCrewLoaded(true)
+      return
     }
 
-    loadCrewMarkers()
-  }, [mapLoaded])
+    const bounds = new mapboxgl.LngLatBounds()
+
+    membersWithLocation.forEach((member, index) => {
+      const colour = CREW_COLOURS[index % CREW_COLOURS.length]
+      const el = createMarkerElement(member, colour)
+      const popup = new mapboxgl.Popup({ offset: 20, maxWidth: '220px' }).setHTML(
+        buildPopupHTML(member)
+      )
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat([member.homeLocation!.lng, member.homeLocation!.lat])
+        .setPopup(popup)
+        .addTo(map)
+
+      markersRef.current.push(marker)
+      bounds.extend([member.homeLocation!.lng, member.homeLocation!.lat])
+    })
+
+    if (membersWithLocation.length > 0) {
+      map.fitBounds(bounds, { padding: 80, maxZoom: 10 })
+    }
+
+    setCrewLoaded(true)
+  }, [mapLoaded, allUsers])
 
   // Draw routes when navigated from TripDetail with focusDestId — no sheet, just lines
   useEffect(() => {
