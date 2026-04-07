@@ -38,6 +38,7 @@ Phase 04: 2/2 plans complete [####################] 100%
 - Phase 2 complete: four critical bug fixes (BUG-FUEL, BUG-DATE, BUG-COORDS, BUG-CACHE)
 - Phase 3 complete: destination photos — curated Unsplash URLs, hero banners in cards and Mapbox popups
 - Phase 4 complete: live petrol price integration — fuelPrices.ts utility, Firestore caching, TripDetail fetch-on-mount, CostBreakdown override toggle
+- Phase 4.1 inserted after Phase 4: trip voting flow fix (URGENT) — unblocks UAT for Phase 4 and all future trip lifecycle testing
 
 ### Decisions Made
 

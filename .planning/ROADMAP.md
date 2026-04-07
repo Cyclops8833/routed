@@ -48,6 +48,16 @@ Plans:
 
 ---
 
+### Phase 04.1: Trip voting flow (INSERTED)
+
+**Goal:** Fix the ability to move a planned trip to voting state so the full trip lifecycle (plan → vote → confirm) works end-to-end. Unblocks manual UAT for Phase 4 and all future trip lifecycle testing.
+**Requirements**: TBD
+**Depends on:** Phase 4
+**Plans:** TBD
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 04.1 to break down)
+
 ### Phase 5: Performance foundation
 
 **Goal:** Eliminate the 7 duplicate `getDocs(collection(db, 'users'))` calls by creating a shared `CrewContext` with a single `onSnapshot` subscription. Move user avatar photos from base64 Firestore blobs to Firebase Storage download URLs. Wrap `DestinationCard` and `SpotlightCard` in `React.memo`. Save drive cache incrementally per batch rather than only on full completion.
