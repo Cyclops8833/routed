@@ -10,6 +10,7 @@ import CrewPage from './pages/Crew'
 import ProfilePage from './pages/Profile'
 import { NotificationProvider } from './contexts/NotificationContext'
 import { CrewProvider } from './contexts/CrewContext'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 const MapPage = lazy(() => import('./pages/Map'))
 const TripDetailPage = lazy(() => import('./pages/TripDetail'))
@@ -81,11 +82,13 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <CrewProvider>
-        <NotificationProvider>
-          <AppContent />
-        </NotificationProvider>
-      </CrewProvider>
+      <ErrorBoundary>
+        <CrewProvider>
+          <NotificationProvider>
+            <AppContent />
+          </NotificationProvider>
+        </CrewProvider>
+      </ErrorBoundary>
     </BrowserRouter>
   )
 }
