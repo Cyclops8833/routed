@@ -13,6 +13,7 @@ import DirectTripSheet from '../components/DirectTripSheet'
 import { addDestinationDots } from '../utils/mapDestinations'
 import { getSpotlightDestinations } from '../utils/spotlight'
 import { isCacheValid, buildDriveCache, saveDriveCache, formatDriveTime } from '../utils/driveCache'
+import { fetchRoutes, drawRoutes } from '../utils/mapRoutes'
 import type { DriveCache } from '../types'
 import { destinations } from '../data/destinations'
 import type { Destination } from '../data/destinations'
@@ -530,15 +531,37 @@ export default function MapPage() {
     loadCrewMarkers()
   }, [mapLoaded])
 
-  // Auto-open a destination when navigated from TripDetail with focusDestId
+  // Draw routes when navigated from TripDetail with focusDestId — no sheet, just lines
   useEffect(() => {
-    if (!mapLoaded) return
+    if (!mapLoaded || !crewLoaded) return
     const focusDestId = (location.state as { focusDestId?: string } | null)?.focusDestId
     if (!focusDestId) return
-    setPreselectDestId(focusDestId)
-    setSheetMode('full')
-    setPlanMode('destination')
-  }, [mapLoaded])
+
+    const map = mapRef.current
+    if (!map) return
+
+    const dest = destinations.find((d) => d.id === focusDestId)
+    if (!dest) return
+
+    const membersWithLocation = crewMembersRef.current
+      .filter((p) => p.homeLocation && typeof p.homeLocation.lat === 'number')
+
+    if (membersWithLocation.length === 0) return
+
+    const routeMembers = membersWithLocation.map((p, idx) => ({
+      uid: p.uid,
+      name: p.displayName,
+      colour: CREW_COLOURS[idx % CREW_COLOURS.length],
+      lat: p.homeLocation!.lat,
+      lng: p.homeLocation!.lng,
+    }))
+
+    map.flyTo({ center: [dest.lng, dest.lat], zoom: 8, duration: 1200 })
+
+    fetchRoutes(routeMembers, { lat: dest.lat, lng: dest.lng }).then((routes) => {
+      drawRoutes(map, routes)
+    })
+  }, [mapLoaded, crewLoaded])
 
   // Check for pending trip dates from Trips page
   useEffect(() => {
