@@ -13,6 +13,7 @@ interface CostBreakdownProps {
   lineItems: CostLineItem[]
   fuelPrices: FuelPrices
   dailyFoodRate: number
+  priceIsEstimated?: boolean   // true when using fallback national average
 }
 
 function useCountUp(target: number, duration: number, active: boolean): number {
@@ -151,6 +152,7 @@ export default function CostBreakdown({
   lineItems,
   fuelPrices,
   dailyFoodRate,
+  priceIsEstimated = false,
 }: CostBreakdownProps) {
   const [mounted, setMounted] = useState(false)
   const [newLabel, setNewLabel] = useState('')
@@ -159,6 +161,7 @@ export default function CostBreakdown({
   const [localPetrol, setLocalPetrol] = useState(String(fuelPrices.petrol))
   const [localDiesel, setLocalDiesel] = useState(String(fuelPrices.diesel))
   const [localFoodRate, setLocalFoodRate] = useState(String(dailyFoodRate))
+  const [showOverride, setShowOverride] = useState(false)
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true))
@@ -463,6 +466,111 @@ export default function CostBreakdown({
         })()}
       </div>
 
+      {/* Fuel prices — live display + override toggle (per D-03) */}
+      <div
+        style={{
+          borderTop: '1px solid var(--color-border)',
+          paddingTop: '20px',
+          marginTop: editable ? '0' : '20px',
+        }}
+      >
+        <div
+          style={{
+            fontFamily: 'DM Sans, system-ui, sans-serif',
+            fontSize: '13px',
+            fontWeight: '600',
+            color: 'var(--color-charcoal)',
+            marginBottom: '10px',
+          }}
+        >
+          Fuel Prices ($/L)
+        </div>
+
+        {/* Live price display row */}
+        <div style={{ display: 'flex', gap: '16px', marginBottom: showOverride ? '12px' : '0' }}>
+          <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: 'var(--color-charcoal)' }}>
+            Petrol: ${fuelPrices.petrol.toFixed(2)}/L{priceIsEstimated && !showOverride ? (
+              <span style={{ fontSize: '11px', color: 'var(--color-stone)', marginLeft: '4px' }}>est.</span>
+            ) : null}
+          </div>
+          <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: 'var(--color-charcoal)' }}>
+            Diesel: ${fuelPrices.diesel.toFixed(2)}/L{priceIsEstimated && !showOverride ? (
+              <span style={{ fontSize: '11px', color: 'var(--color-stone)', marginLeft: '4px' }}>est.</span>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Override toggle — only show when editable (per D-03) */}
+        {editable && (
+          <button
+            onClick={() => setShowOverride(!showOverride)}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '4px 0',
+              fontFamily: 'DM Sans, system-ui, sans-serif',
+              fontSize: '12px',
+              color: 'var(--color-moss)',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              marginTop: '6px',
+            }}
+          >
+            {showOverride ? 'Use live price' : 'Override'}
+          </button>
+        )}
+
+        {/* Override inputs — collapsed by default (per D-03), session-only (per D-04) */}
+        {showOverride && editable && (
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <div style={{ flex: 1 }}>
+              <label
+                style={{
+                  fontFamily: 'DM Sans, system-ui, sans-serif',
+                  fontSize: '12px',
+                  color: 'var(--color-stone)',
+                  display: 'block',
+                  marginBottom: '4px',
+                }}
+              >
+                Petrol
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                style={smallInputStyle}
+                value={localPetrol}
+                onChange={(e) => setLocalPetrol(e.target.value)}
+                onBlur={handleFuelBlur}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label
+                style={{
+                  fontFamily: 'DM Sans, system-ui, sans-serif',
+                  fontSize: '12px',
+                  color: 'var(--color-stone)',
+                  display: 'block',
+                  marginBottom: '4px',
+                }}
+              >
+                Diesel
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                style={smallInputStyle}
+                value={localDiesel}
+                onChange={(e) => setLocalDiesel(e.target.value)}
+                onBlur={handleFuelBlur}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Editable section */}
       {editable && (
         <div
@@ -474,67 +582,6 @@ export default function CostBreakdown({
             gap: '20px',
           }}
         >
-          {/* Fuel prices */}
-          <div>
-            <div
-              style={{
-                fontFamily: 'DM Sans, system-ui, sans-serif',
-                fontSize: '13px',
-                fontWeight: '600',
-                color: 'var(--color-charcoal)',
-                marginBottom: '10px',
-              }}
-            >
-              Fuel Prices ($/L)
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <div style={{ flex: 1 }}>
-                <label
-                  style={{
-                    fontFamily: 'DM Sans, system-ui, sans-serif',
-                    fontSize: '12px',
-                    color: 'var(--color-stone)',
-                    display: 'block',
-                    marginBottom: '4px',
-                  }}
-                >
-                  Petrol
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  style={smallInputStyle}
-                  value={localPetrol}
-                  onChange={(e) => setLocalPetrol(e.target.value)}
-                  onBlur={handleFuelBlur}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label
-                  style={{
-                    fontFamily: 'DM Sans, system-ui, sans-serif',
-                    fontSize: '12px',
-                    color: 'var(--color-stone)',
-                    display: 'block',
-                    marginBottom: '4px',
-                  }}
-                >
-                  Diesel
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  style={smallInputStyle}
-                  value={localDiesel}
-                  onChange={(e) => setLocalDiesel(e.target.value)}
-                  onBlur={handleFuelBlur}
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Food rate */}
           <div>
             <div
