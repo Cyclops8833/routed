@@ -12,11 +12,11 @@ import {
 } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
 import { db, auth } from '../firebase'
-import type { Trip, UserProfile } from '../types'
+import type { Trip, UserProfile, GearItem } from '../types'
 import { destinations as allDestinations } from '../data/destinations'
 import type { Destination } from '../data/destinations'
 import { calculateCosts } from '../utils/costEngine'
-import type { CostLineItem, FuelPrices, CostBreakdown as CostBreakdownData } from '../utils/costEngine'
+import type { FuelPrices, CostBreakdown as CostBreakdownData } from '../utils/costEngine'
 import { loadFuelPriceCache, fetchFuelPrices, saveFuelPriceCache, FALLBACK_PRICES } from '../utils/fuelPrices'
 import type { LiveFuelPrices } from '../utils/fuelPrices'
 import CostBreakdown from '../components/CostBreakdown'
@@ -163,6 +163,9 @@ export default function TripDetailPage() {
   const [reopeningVoting, setReopeningVoting] = useState(false)
   const [liveFuelPrices, setLiveFuelPrices] = useState<LiveFuelPrices | null>(null)
   const [fuelPricesLoading, setFuelPricesLoading] = useState(false)
+  const [gearItems, setGearItems] = useState<GearItem[]>([])
+  const [newGearLabel, setNewGearLabel] = useState('')
+  const [newGearAssignee, setNewGearAssignee] = useState<string | null>(null)
 
   // ── Auth ──
   useEffect(() => {
@@ -265,6 +268,18 @@ export default function TripDetailPage() {
     return unsub
   }, [tripId])
 
+  // ── Gear real-time ──
+  useEffect(() => {
+    if (!tripId) return
+    const unsub = onSnapshot(
+      collection(db, 'trips', tripId, 'gear'),
+      (snap) => {
+        setGearItems(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as GearItem))
+      }
+    )
+    return unsub
+  }, [tripId])
+
   // ── Comments real-time ──
   useEffect(() => {
     if (!tripId) return
@@ -292,7 +307,6 @@ export default function TripDetailPage() {
     : { petrol: FALLBACK_PRICES.petrol, diesel: FALLBACK_PRICES.diesel }
   const priceIsEstimated = liveFuelPrices?.isEstimated ?? true
   const dailyFoodRate: number = trip?.costConfig?.dailyFoodRate ?? 30
-  const lineItems: CostLineItem[] = (trip?.costConfig?.lineItems ?? []) as CostLineItem[]
 
   const confirmedDestination: Destination | null = trip?.confirmedDestinationId
     ? (allDestinations.find((d) => d.id === trip.confirmedDestinationId) ?? null)
@@ -321,7 +335,7 @@ export default function TripDetailPage() {
           maxBudget: trip?.maxBudget ?? 500,
           fuelPrices,
           dailyFoodRate,
-          lineItems,
+          lineItems: [],
         })
       : null
 
@@ -337,19 +351,18 @@ export default function TripDetailPage() {
     })
   }
 
-  async function handleAddLineItem(item: Omit<CostLineItem, 'id'>) {
-    if (!trip) return
-    const withId: CostLineItem = {
-      ...item,
-      id: crypto.randomUUID(),
+  async function handleAddGearItem(label: string, assignedUid: string | null) {
+    if (!tripId || !label.trim()) return
+    await addDoc(collection(db, 'trips', tripId, 'gear'), {
+      label: label.trim(),
+      assignedUid,
       addedByUid: currentUid ?? '',
-    }
-    const existing = lineItems
-    await updateCostConfig({ lineItems: [...existing, withId] })
+    })
   }
 
-  async function handleRemoveLineItem(id: string) {
-    await updateCostConfig({ lineItems: lineItems.filter((li) => li.id !== id) })
+  async function handleRemoveGearItem(id: string) {
+    if (!tripId) return
+    await deleteDoc(doc(db, 'trips', tripId, 'gear', id))
   }
 
   async function handleUpdateFuelPrices(prices: FuelPrices) {
@@ -1255,12 +1268,9 @@ export default function TripDetailPage() {
                 maxBudget={trip.maxBudget}
                 editable={isEditable}
                 nights={nights}
-                lineItems={lineItems}
                 fuelPrices={fuelPrices}
                 dailyFoodRate={dailyFoodRate}
                 priceIsEstimated={priceIsEstimated}
-                onAddLineItem={isEditable ? handleAddLineItem : undefined}
-                onRemoveLineItem={isEditable ? handleRemoveLineItem : undefined}
                 onUpdateFuelPrices={isEditable ? handleUpdateFuelPrices : undefined}
                 onUpdateFoodRate={isEditable ? handleUpdateFoodRate : undefined}
               />
@@ -1296,6 +1306,118 @@ export default function TripDetailPage() {
                 Routes shown on the main map
               </div>
             </div>
+
+            {/* Gear & Supplies */}
+            <section>
+              <h2 style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '18px', fontWeight: '700', color: 'var(--color-charcoal)', margin: '0 0 12px' }}>
+                Gear &amp; Supplies
+              </h2>
+
+              {gearItems.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+                  {gearItems.map((item) => {
+                    const assignedProfile = item.assignedUid
+                      ? attendeeProfiles.find((p) => p.uid === item.assignedUid)
+                      : null
+                    return (
+                      <div
+                        key={item.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px 12px',
+                          background: 'var(--color-surface)',
+                          borderRadius: '8px',
+                          border: '1px solid var(--color-border)',
+                        }}
+                      >
+                        <span style={{ flex: 1, fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: 'var(--color-charcoal)' }}>
+                          {item.label}
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: 'DM Sans, system-ui, sans-serif',
+                            fontSize: '12px',
+                            color: assignedProfile ? '#4A6741' : 'var(--color-stone)',
+                            background: assignedProfile ? 'rgba(74,103,65,0.1)' : 'rgba(140,133,120,0.1)',
+                            borderRadius: '100px',
+                            padding: '2px 8px',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {assignedProfile ? assignedProfile.displayName : 'Unassigned'}
+                        </span>
+                        <button
+                          onClick={() => handleRemoveGearItem(item.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E07A5F', fontSize: '16px', lineHeight: 1, padding: '2px 4px' }}
+                          aria-label="Remove"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <input
+                  style={{ ...inputStyle, flex: 1, minWidth: '120px' }}
+                  placeholder="e.g. Weber Q, Firewood..."
+                  value={newGearLabel}
+                  onChange={(e) => setNewGearLabel(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleAddGearItem(newGearLabel, newGearAssignee)
+                      setNewGearLabel('')
+                      setNewGearAssignee(null)
+                    }
+                  }}
+                />
+                <select
+                  value={newGearAssignee ?? ''}
+                  onChange={(e) => setNewGearAssignee(e.target.value || null)}
+                  style={{
+                    fontFamily: 'DM Sans, system-ui, sans-serif',
+                    fontSize: '14px',
+                    padding: '10px 12px',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '8px',
+                    background: 'var(--color-base)',
+                    color: newGearAssignee ? 'var(--color-charcoal)' : 'var(--color-stone)',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="">Unassigned</option>
+                  {attendeeProfiles.map((p) => (
+                    <option key={p.uid} value={p.uid}>{p.displayName}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => {
+                    handleAddGearItem(newGearLabel, newGearAssignee)
+                    setNewGearLabel('')
+                    setNewGearAssignee(null)
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    background: '#4A6741',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    fontFamily: 'DM Sans, system-ui, sans-serif',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            </section>
 
             {/* Checklist */}
             <section>

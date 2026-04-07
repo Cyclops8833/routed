@@ -54,6 +54,13 @@ export interface Shortlist {
   createdAt: Date
 }
 
+export interface GearItem {
+  id: string
+  label: string
+  assignedUid: string | null  // null = unassigned
+  addedByUid: string
+}
+
 export interface Trip {
   id: string
   name: string

@@ -1,19 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
-import type { CostBreakdown as CostBreakdownData, CostLineItem, FuelPrices, MemberCost } from '../utils/costEngine'
+import type { CostBreakdown as CostBreakdownData, FuelPrices, MemberCost } from '../utils/costEngine'
 
 interface CostBreakdownProps {
   breakdown: CostBreakdownData
   maxBudget: number
-  onAddLineItem?: (item: Omit<CostLineItem, 'id'>) => void
-  onRemoveLineItem?: (id: string) => void
   onUpdateFuelPrices?: (prices: FuelPrices) => void
   onUpdateFoodRate?: (rate: number) => void
   editable?: boolean
   nights: number
-  lineItems: CostLineItem[]
   fuelPrices: FuelPrices
   dailyFoodRate: number
-  priceIsEstimated?: boolean   // true when using fallback national average
+  priceIsEstimated?: boolean
 }
 
 function useCountUp(target: number, duration: number, active: boolean): number {
@@ -44,6 +41,15 @@ function useCountUp(target: number, duration: number, active: boolean): number {
   return value
 }
 
+type Segment = 'fuel' | 'camp' | 'food' | 'other'
+
+const SEGMENT_META: Record<Segment, { label: string; color: string; key: keyof MemberCost }> = {
+  fuel:  { label: 'Fuel',  color: '#4A6741', key: 'fuelCost' },
+  camp:  { label: 'Camp',  color: '#C4893B', key: 'campsiteCost' },
+  food:  { label: 'Food',  color: '#B85C38', key: 'foodCost' },
+  other: { label: 'Other', color: '#8C8578', key: 'otherCost' },
+}
+
 function MemberBar({
   member,
   maxTotal,
@@ -55,20 +61,18 @@ function MemberBar({
   mounted: boolean
   index: number
 }) {
-  const fuelPct = maxTotal > 0 ? (member.fuelCost / maxTotal) * 100 : 0
-  const campPct = maxTotal > 0 ? (member.campsiteCost / maxTotal) * 100 : 0
-  const foodPct = maxTotal > 0 ? (member.foodCost / maxTotal) * 100 : 0
-  const otherPct = maxTotal > 0 ? (member.otherCost / maxTotal) * 100 : 0
+  const [activeSeg, setActiveSeg] = useState<Segment | null>(null)
+
+  const pct = (cost: number) => (maxTotal > 0 ? (cost / maxTotal) * 100 : 0)
 
   const animatedTotal = useCountUp(member.total, 800, mounted)
 
-  const barStyle = (pct: number, bg: string): React.CSSProperties => ({
-    width: mounted ? `${pct}%` : '0%',
-    height: '100%',
-    backgroundColor: bg,
-    transition: 'width 600ms ease-out',
-    flexShrink: 0,
-  })
+  const segments: Array<{ seg: Segment; width: number }> = [
+    { seg: 'fuel',  width: pct(member.fuelCost) },
+    { seg: 'camp',  width: pct(member.campsiteCost) },
+    { seg: 'food',  width: pct(member.foodCost) },
+    { seg: 'other', width: pct(member.otherCost) },
+  ]
 
   return (
     <div
@@ -116,6 +120,8 @@ function MemberBar({
           ${Math.round(animatedTotal)}
         </span>
       </div>
+
+      {/* Segmented bar — each segment is tappable */}
       <div
         style={{
           height: '14px',
@@ -123,41 +129,84 @@ function MemberBar({
           overflow: 'hidden',
           background: 'rgba(140,133,120,0.12)',
           display: 'flex',
+          cursor: 'pointer',
         }}
       >
-        <div style={barStyle(fuelPct, '#4A6741')} />
-        <div style={barStyle(campPct, '#C4893B')} />
-        <div style={barStyle(foodPct, '#B85C38')} />
-        <div style={barStyle(otherPct, '#8C8578')} />
+        {segments.map(({ seg, width }) => (
+          <div
+            key={seg}
+            onClick={() => setActiveSeg(activeSeg === seg ? null : seg)}
+            title={SEGMENT_META[seg].label}
+            style={{
+              width: mounted ? `${width}%` : '0%',
+              height: '100%',
+              backgroundColor: SEGMENT_META[seg].color,
+              transition: 'width 600ms ease-out',
+              flexShrink: 0,
+              opacity: activeSeg && activeSeg !== seg ? 0.45 : 1,
+            }}
+          />
+        ))}
       </div>
+
+      {/* Inline detail row — shown when a segment is active */}
+      {activeSeg && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            marginTop: '5px',
+            paddingLeft: '2px',
+          }}
+        >
+          <div
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: SEGMENT_META[activeSeg].color,
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              fontFamily: 'DM Sans, system-ui, sans-serif',
+              fontSize: '12px',
+              color: 'var(--color-stone)',
+            }}
+          >
+            {SEGMENT_META[activeSeg].label}
+          </span>
+          <span
+            style={{
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '12px',
+              fontWeight: '700',
+              color: SEGMENT_META[activeSeg].color,
+              marginLeft: '2px',
+            }}
+          >
+            ${Math.round(member[SEGMENT_META[activeSeg].key] as number)}
+          </span>
+        </div>
+      )}
     </div>
   )
-}
-
-interface EditingItem {
-  id: string
-  label: string
-  amount: string
 }
 
 export default function CostBreakdown({
   breakdown,
   maxBudget,
-  onAddLineItem,
-  onRemoveLineItem,
   onUpdateFuelPrices,
   onUpdateFoodRate,
   editable = false,
   nights,
-  lineItems,
   fuelPrices,
   dailyFoodRate,
   priceIsEstimated = false,
 }: CostBreakdownProps) {
   const [mounted, setMounted] = useState(false)
-  const [newLabel, setNewLabel] = useState('')
-  const [newAmount, setNewAmount] = useState('')
-  const [editingItem, setEditingItem] = useState<EditingItem | null>(null)
   const [localPetrol, setLocalPetrol] = useState(String(fuelPrices.petrol))
   const [localDiesel, setLocalDiesel] = useState(String(fuelPrices.diesel))
   const [localFoodRate, setLocalFoodRate] = useState(String(dailyFoodRate))
@@ -177,14 +226,6 @@ export default function CostBreakdown({
   const cheapestTotal = useCountUp(breakdown.cheapestMember?.total ?? 0, 800, mounted)
   const expensiveTotal = useCountUp(breakdown.mostExpensiveMember?.total ?? 0, 800, mounted)
 
-  function handleAddItem() {
-    const amt = parseFloat(newAmount)
-    if (!newLabel.trim() || isNaN(amt) || amt <= 0) return
-    onAddLineItem?.({ label: newLabel.trim(), amount: amt, addedByUid: '' })
-    setNewLabel('')
-    setNewAmount('')
-  }
-
   function handleFuelBlur() {
     const p = parseFloat(localPetrol)
     const d = parseFloat(localDiesel)
@@ -200,24 +241,17 @@ export default function CostBreakdown({
     }
   }
 
-  const inputStyle: React.CSSProperties = {
+  const smallInputStyle: React.CSSProperties = {
     fontFamily: 'DM Sans, system-ui, sans-serif',
-    fontSize: '14px',
-    padding: '8px 10px',
+    fontSize: '13px',
+    padding: '6px 8px',
     border: '1px solid var(--color-border)',
     borderRadius: '8px',
     background: 'var(--color-base)',
     color: 'var(--color-charcoal)',
     outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box',
-  }
-
-  const smallInputStyle: React.CSSProperties = {
-    ...inputStyle,
     width: '80px',
-    fontSize: '13px',
-    padding: '6px 8px',
+    boxSizing: 'border-box',
   }
 
   return (
@@ -276,14 +310,9 @@ export default function CostBreakdown({
           marginBottom: '20px',
         }}
       >
-        {[
-          { label: 'Fuel', color: '#4A6741' },
-          { label: 'Camp', color: '#C4893B' },
-          { label: 'Food', color: '#B85C38' },
-          { label: 'Other', color: '#8C8578' },
-        ].map(({ label, color }) => (
+        {(Object.entries(SEGMENT_META) as Array<[Segment, typeof SEGMENT_META[Segment]]>).map(([seg, { label, color }]) => (
           <div
-            key={label}
+            key={seg}
             style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
           >
             <div
@@ -466,7 +495,7 @@ export default function CostBreakdown({
         })()}
       </div>
 
-      {/* Fuel prices — live display + override toggle (per D-03) */}
+      {/* Fuel prices — live display + override toggle */}
       <div
         style={{
           borderTop: '1px solid var(--color-border)',
@@ -486,7 +515,6 @@ export default function CostBreakdown({
           Fuel Prices ($/L)
         </div>
 
-        {/* Live price display row */}
         <div style={{ display: 'flex', gap: '16px', marginBottom: showOverride ? '12px' : '0' }}>
           <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: 'var(--color-charcoal)' }}>
             Petrol: ${fuelPrices.petrol.toFixed(2)}/L{priceIsEstimated && !showOverride ? (
@@ -500,7 +528,6 @@ export default function CostBreakdown({
           </div>
         </div>
 
-        {/* Override toggle — only show when editable (per D-03) */}
         {editable && (
           <button
             onClick={() => setShowOverride(!showOverride)}
@@ -520,7 +547,6 @@ export default function CostBreakdown({
           </button>
         )}
 
-        {/* Override inputs — collapsed by default (per D-03), session-only (per D-04) */}
         {showOverride && editable && (
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <div style={{ flex: 1 }}>
@@ -571,7 +597,7 @@ export default function CostBreakdown({
         )}
       </div>
 
-      {/* Editable section */}
+      {/* Editable section — food rate + budget note */}
       {editable && (
         <div
           style={{
@@ -582,7 +608,6 @@ export default function CostBreakdown({
             gap: '20px',
           }}
         >
-          {/* Food rate */}
           <div>
             <div
               style={{
@@ -617,222 +642,6 @@ export default function CostBreakdown({
             </div>
           </div>
 
-          {/* Line items */}
-          <div>
-            <div
-              style={{
-                fontFamily: 'DM Sans, system-ui, sans-serif',
-                fontSize: '13px',
-                fontWeight: '600',
-                color: 'var(--color-charcoal)',
-                marginBottom: '10px',
-              }}
-            >
-              Shared Expenses
-            </div>
-
-            {lineItems.length > 0 && (
-              <div style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {lineItems.map((item) => (
-                  <div key={item.id}>
-                    {editingItem?.id === item.id ? (
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input
-                          style={{ ...inputStyle, flex: 1 }}
-                          value={editingItem.label}
-                          onChange={(e) =>
-                            setEditingItem({ ...editingItem, label: e.target.value })
-                          }
-                        />
-                        <input
-                          type="number"
-                          step="1"
-                          min="0"
-                          style={{ ...inputStyle, width: '80px' }}
-                          value={editingItem.amount}
-                          onChange={(e) =>
-                            setEditingItem({ ...editingItem, amount: e.target.value })
-                          }
-                        />
-                        <button
-                          onClick={() => {
-                            const amt = parseFloat(editingItem.amount)
-                            if (editingItem.label.trim() && !isNaN(amt) && amt > 0) {
-                              onRemoveLineItem?.(item.id)
-                              onAddLineItem?.({
-                                label: editingItem.label.trim(),
-                                amount: amt,
-                                addedByUid: item.addedByUid,
-                              })
-                            }
-                            setEditingItem(null)
-                          }}
-                          style={{
-                            padding: '6px 12px',
-                            background: '#4A6741',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontFamily: 'DM Sans, system-ui, sans-serif',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setEditingItem(null)}
-                          style={{
-                            padding: '6px 10px',
-                            background: 'transparent',
-                            color: 'var(--color-stone)',
-                            border: '1px solid var(--color-border)',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontFamily: 'DM Sans, system-ui, sans-serif',
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '8px 10px',
-                          borderRadius: '8px',
-                          background: 'var(--color-base)',
-                          border: '1px solid var(--color-border)',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() =>
-                          setEditingItem({
-                            id: item.id,
-                            label: item.label,
-                            amount: String(item.amount),
-                          })
-                        }
-                      >
-                        <span
-                          style={{
-                            fontFamily: 'DM Sans, system-ui, sans-serif',
-                            fontSize: '14px',
-                            color: 'var(--color-charcoal)',
-                            flex: 1,
-                          }}
-                        >
-                          {item.label}
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: 'JetBrains Mono, monospace',
-                            fontSize: '13px',
-                            color: 'var(--color-stone)',
-                          }}
-                        >
-                          ${item.amount}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onRemoveLineItem?.(item.id)
-                          }}
-                          style={{
-                            padding: '2px 6px',
-                            background: 'transparent',
-                            color: '#E07A5F',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: '16px',
-                            lineHeight: 1,
-                            borderRadius: '4px',
-                          }}
-                          aria-label="Remove item"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Add expense form */}
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-              <div style={{ flex: 1 }}>
-                <label
-                  style={{
-                    fontFamily: 'DM Sans, system-ui, sans-serif',
-                    fontSize: '12px',
-                    color: 'var(--color-stone)',
-                    display: 'block',
-                    marginBottom: '4px',
-                  }}
-                >
-                  Description
-                </label>
-                <input
-                  style={inputStyle}
-                  placeholder="e.g. Firewood"
-                  value={newLabel}
-                  onChange={(e) => setNewLabel(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddItem()
-                  }}
-                />
-              </div>
-              <div>
-                <label
-                  style={{
-                    fontFamily: 'DM Sans, system-ui, sans-serif',
-                    fontSize: '12px',
-                    color: 'var(--color-stone)',
-                    display: 'block',
-                    marginBottom: '4px',
-                  }}
-                >
-                  Amount ($)
-                </label>
-                <input
-                  type="number"
-                  step="1"
-                  min="0"
-                  style={{ ...inputStyle, width: '90px' }}
-                  placeholder="0"
-                  value={newAmount}
-                  onChange={(e) => setNewAmount(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddItem()
-                  }}
-                />
-              </div>
-              <button
-                onClick={handleAddItem}
-                style={{
-                  padding: '8px 16px',
-                  background: '#4A6741',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  fontFamily: 'DM Sans, system-ui, sans-serif',
-                  whiteSpace: 'nowrap',
-                  height: '38px',
-                }}
-              >
-                Add
-              </button>
-            </div>
-          </div>
-
-          {/* Budget note */}
           <div
             style={{
               fontFamily: 'DM Sans, system-ui, sans-serif',
