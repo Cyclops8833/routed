@@ -2,6 +2,7 @@ import { lazy, Suspense, useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { initTheme } from './hooks/useTheme'
+import { useFCMSetup } from './hooks/useFCMSetup'
 import Layout from './components/Layout'
 import Landing from './pages/Landing'
 import Onboarding from './pages/Onboarding'
@@ -11,6 +12,7 @@ import ProfilePage from './pages/Profile'
 import { NotificationProvider } from './contexts/NotificationContext'
 import { CrewProvider } from './contexts/CrewContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { NotificationPrompt } from './components/NotificationPrompt'
 
 const MapPage = lazy(() => import('./pages/Map'))
 const TripDetailPage = lazy(() => import('./pages/TripDetail'))
@@ -48,6 +50,8 @@ function LoadingScreen() {
 
 function AppContent() {
   const { user, profile, loading, authError } = useAuth()
+  // FCM token registration — runs on auth state change (D-02); safe to call unconditionally
+  useFCMSetup()
 
   if (loading) return <LoadingScreen />
 
@@ -59,6 +63,7 @@ function AppContent() {
 
   return (
     <Layout>
+      <NotificationPrompt />
       <Suspense fallback={<div className="topo-bg" style={{ height: '100vh' }} />}>
         <Routes>
           <Route path="/map" element={<MapPage />} />
