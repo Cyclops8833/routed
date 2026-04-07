@@ -28,6 +28,15 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 ## v1.1 Crew Engagement
 
 - [ ] Phase 7: Push notifications — FCM token registration, 6 trigger types (vote, confirm, propose, approaching, shame)
+  **Goal:** OS-level push notifications for key trip events so the crew stays in sync without opening the app
+  **Plans:** 4 plans
+  **Requirements:** [NOTIF-01, NOTIF-02, NOTIF-03, NOTIF-04, NOTIF-05, NOTIF-06, NOTIF-07, NOTIF-08]
+  Plans:
+  - [ ] 07-01-PLAN.md — FCM infrastructure: types, firebase init, CF Worker relay, service worker
+  - [ ] 07-02-PLAN.md — Token registration hook + contextual permission prompt
+  - [ ] 07-03-PLAN.md — Notification triggers: vote, confirm, propose, approaching
+  - [ ] 07-04-PLAN.md — Shame notifications (72hr + daily) + end-to-end smoke test
+
 - [ ] Phase 8: Trip chat / comments — per-trip message thread, real-time via Firestore
 - [ ] Phase 9: More destinations — expand beyond 70 curated spots with photos
 
@@ -44,6 +53,6 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 04.1: Trip voting flow | v1.0 | 1/1 | ✅ Complete | 2026-04-07 |
 | 5: Performance foundation | v1.0 | 4/4 | ✅ Complete | 2026-04-07 |
 | 6: Error boundary + security | v1.0 | 2/2 | ✅ Complete | 2026-04-08 |
-| 7: Push notifications | v1.1 | 0/? | 🔲 Not started | — |
+| 7: Push notifications | v1.1 | 0/4 | 🔲 Planned | — |
 | 8: Trip chat / comments | v1.1 | 0/? | 🔲 Not started | — |
 | 9: More destinations | v1.1 | 0/? | 🔲 Not started | — |
