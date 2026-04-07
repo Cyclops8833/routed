@@ -39,7 +39,13 @@ One place to go from "where should we go?" to "confirmed, here's the cost per pe
 - ✓ popup.on('open') bridge (removed window.__routedPlanTrip global) — v1.0
 - ✓ Mapbox token consolidation to src/config.ts — v1.0
 
-### Active (v1.1+)
+### Active (v1.1)
+
+- [ ] Push notifications — FCM token registration, 6 trigger types (vote, confirm, propose, approaching, shame, participation shame)
+- [ ] Trip chat / comments — per-trip message thread, real-time Firestore
+- [ ] More destinations — expand beyond 70 curated spots with Unsplash photos
+
+### Carry-forward UAT (from v1.0)
 
 - [ ] Deploy Firestore rules to production (firebase deploy --only firestore:rules)
 - [ ] Verify error boundary recovery screen in live app

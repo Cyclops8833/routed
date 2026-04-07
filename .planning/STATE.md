@@ -1,71 +1,46 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: v1.0 milestone complete
-last_updated: "2026-04-07T22:26:42.890Z"
+milestone: v1.1
+milestone_name: Crew Engagement
+status: active
+last_updated: "2026-04-08T00:00:00.000Z"
 progress:
-  total_phases: 7
-  completed_phases: 6
-  total_plans: 13
-  completed_plans: 15
-  percent: 100
+  total_phases: 3
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Current Phase
 
-Phase 04: Live petrol price integration — COMPLETE
-
-## Current Plan
-
-Plan 02 of 02 — COMPLETE
+No active phase — milestone defined, ready to plan Phase 7.
 
 ## Progress
 
-Phase 01: 2/2 plans complete [####################] 100%
-Phase 02: 2/2 plans complete [####################] 100%
-Phase 03: 2/2 plans complete [####################] 100%
-Phase 04: 2/2 plans complete [####################] 100%
+Phase 07: Push notifications — 0 plans complete
+Phase 08: Trip chat / comments — 0 plans complete
+Phase 09: More destinations — 0 plans complete
 
 ## Accumulated Context
 
 ### Roadmap Evolution
 
-- Planning directory bootstrapped for routed app (existing codebase)
-- Phase 1 added: Port map enhancements — 3D terrain, tilt, topo/satellite toggle, attribution icon
-- Phase 2 complete: four critical bug fixes (BUG-FUEL, BUG-DATE, BUG-COORDS, BUG-CACHE)
-- Phase 3 complete: destination photos — curated Unsplash URLs, hero banners in cards and Mapbox popups
-- Phase 4 complete: live petrol price integration — fuelPrices.ts utility, Firestore caching, TripDetail fetch-on-mount, CostBreakdown override toggle
-- Phase 4.1 inserted after Phase 4: trip voting flow fix (URGENT) — unblocks UAT for Phase 4 and all future trip lifecycle testing
+- v1.0 shipped 2026-04-08 — 7 phases, 13 plans, ~13,900 LOC
+- v1.1 milestone defined 2026-04-08 — crew engagement layer
+- Phase 7: Push notifications (FCM, Spark tier research needed)
+- Phase 8: Trip chat / comments (scope TBD in discuss-phase)
+- Phase 9: More destinations (curator-only expansion, >70 spots)
 
 ### Decisions Made
 
-- (01-01) Use mapboxgl.AttributionControl({ compact: true }) at bottom-right; NavigationControl stays at top-right
-- (01-02) isTerrainRef (useRef) mirrors isTerrain state so style.load closure reads current value without stale capture
-- (01-02) style.load re-apply pattern: re-add custom sources/layers after setStyle() wipes them; destination dots re-added here too
-- (01-02) Active button color #4A6741 (moss green) matches Landing.tsx design system
-- (02-01) distancesKm built via Object.fromEntries over attendeeProfiles using driveCache?.[confirmedDestinationId!]?.distanceKm ?? 0 — no new Firestore reads
-- (02-01) today const added inside both TripSheet and FormView function bodies — FormView is a separate top-level function requiring its own declaration
-- (02-02) SpotlightCard userHomeLocation prop uses current user's real coordinates for haversine fallback; -37.0/144.5 retained as null-guard fallback only
-- (02-02) destinations.length replaces hardcoded total:70 in checkAndBuildCache — progress bar auto-corrects when destinations array changes
-- (04-01) fuelprice.io API used (VITE_FUELPRICE_API_KEY) — dual-endpoint strategy, fallback to $2.30/$2.85 national average
-- (04-02) handleUpdateFuelPrices changed from Firestore write to local state only — override is session-only, not persisted
-- (04-02) Live testing skipped — trip voting flow is a pre-existing issue unrelated to phase 04
-
-## Performance Metrics
-
-| Phase | Plan | Duration | Tasks | Files |
-|-------|------|----------|-------|-------|
-| 01    | 01   | ~5 min   | 1     | 1     |
-| 01    | 02   | ~45 min  | 3     | 1     |
-| 02    | 01   | ~10 min  | 2     | 2     |
-| 02    | 02   | ~8 min   | 2     | 1     |
-| 04    | 01   | ~4 min   | 2     | 2     |
-| 04    | 02   | ~4 min   | 3     | 2     |
+- (v1.1) Notification delivery: research-first — Spark tier approach to be determined by researcher
+- (v1.1) Destinations: curator-adds-hardcoded pattern, same as current 70
+- (v1.1) Chat scope: TBD in discuss-phase
 
 ## Last Session
 
-- Stopped at: Completed phase 04 — live petrol price integration
-- Date: 2026-04-07
+- Stopped at: v1.1 milestone defined
+- Date: 2026-04-08

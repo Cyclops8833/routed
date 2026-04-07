@@ -25,6 +25,14 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 
 ---
 
+## v1.1 Crew Engagement
+
+- [ ] Phase 7: Push notifications — FCM token registration, 6 trigger types (vote, confirm, propose, approaching, shame)
+- [ ] Phase 8: Trip chat / comments — per-trip message thread, real-time via Firestore
+- [ ] Phase 9: More destinations — expand beyond 70 curated spots with photos
+
+---
+
 ## Progress
 
 | Phase | Milestone | Plans | Status | Completed |
@@ -36,3 +44,6 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 04.1: Trip voting flow | v1.0 | 1/1 | ✅ Complete | 2026-04-07 |
 | 5: Performance foundation | v1.0 | 4/4 | ✅ Complete | 2026-04-07 |
 | 6: Error boundary + security | v1.0 | 2/2 | ✅ Complete | 2026-04-08 |
+| 7: Push notifications | v1.1 | 0/? | 🔲 Not started | — |
+| 8: Trip chat / comments | v1.1 | 0/? | 🔲 Not started | — |
+| 9: More destinations | v1.1 | 0/? | 🔲 Not started | — |
