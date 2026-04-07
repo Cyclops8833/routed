@@ -258,6 +258,14 @@ export default function MapPage() {
     return unsub
   }, [])
 
+  // Load current user's own profile by their UID
+  useEffect(() => {
+    if (!currentUid) return
+    getDoc(doc(db, 'users', currentUid)).then((snap) => {
+      if (snap.exists()) setCurrentUser(snap.data() as UserProfile)
+    })
+  }, [currentUid])
+
   // Check if user has any trips
   useEffect(() => {
     if (!currentUid) return
@@ -505,10 +513,6 @@ export default function MapPage() {
 
           markersRef.current.push(marker)
           bounds.extend([member.homeLocation!.lng, member.homeLocation!.lat])
-
-          if (index === 0) {
-            setCurrentUser(member)
-          }
         })
 
         if (membersWithLocation.length > 0) {
