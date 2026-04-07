@@ -39,6 +39,7 @@ export interface UserProfile {
     diesel: number
     cachedAt: Timestamp
   }
+  fcmToken?: string
 }
 
 export interface Vote {

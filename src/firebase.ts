@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
+import { getMessaging, type Messaging } from 'firebase/messaging'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,3 +18,14 @@ export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const googleProvider = new GoogleAuthProvider()
 export const storage = getStorage(app)
+
+// FCM messaging — only available in browsers that support the Notification API
+let messaging: Messaging | null = null
+if (typeof window !== 'undefined' && 'Notification' in window) {
+  try {
+    messaging = getMessaging(app)
+  } catch {
+    // FCM not supported in this environment (e.g. Safari non-PWA)
+  }
+}
+export { messaging }
