@@ -65,6 +65,7 @@ export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDrag
 
   // Saving state
   const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   // When a destination is tapped "Plan a trip here" while this sheet is active
   useEffect(() => {
@@ -162,25 +163,28 @@ export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDrag
     if (selectedDestIds.size < 2) return
 
     setIsSaving(true)
+    setSaveError(null)
     try {
-      await addDoc(collection(db, 'trips'), {
+      const docRef = await addDoc(collection(db, 'trips'), {
         name: tripName || 'Untitled Trip',
         dateRange: { start: dateFrom, end: dateTo || dateFrom },
         tripLength,
         maxBudget,
         creatorUid: currentUser.uid,
-        attendees: crewMembers
-          .filter((m) => selectedAttendees.has(m.uid))
-          .map((m) => m.uid),
+        attendees: Array.from(new Set([
+          currentUser.uid,
+          ...crewMembers
+            .filter((m) => selectedAttendees.has(m.uid))
+            .map((m) => m.uid),
+        ])),
         selectedDestinationIds: Array.from(selectedDestIds),
         status: 'proposed',
         createdAt: Timestamp.now(),
       })
       onClose()
-      navigate('/trips')
-    } catch (err) {
-      console.error('Failed to save trip:', err)
-    } finally {
+      navigate(`/trips/${docRef.id}`)
+    } catch {
+      setSaveError('Failed to create trip. Try again.')
       setIsSaving(false)
     }
   }
@@ -347,6 +351,20 @@ export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDrag
             paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
           }}
         >
+          {saveError && (
+            <div style={{
+              padding: '10px 14px',
+              borderRadius: '10px',
+              background: 'rgba(224,122,95,0.1)',
+              color: '#E07A5F',
+              fontSize: '13px',
+              fontWeight: '600',
+              fontFamily: 'DM Sans, system-ui, sans-serif',
+              marginBottom: '10px',
+            }}>
+              {saveError}
+            </div>
+          )}
           <button
             onClick={handleContinueToVoting}
             disabled={isSaving}
