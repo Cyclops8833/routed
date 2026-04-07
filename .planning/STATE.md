@@ -2,21 +2,21 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Executing Phase 04
-last_updated: "2026-04-07T08:28:20.052Z"
+status: Phase 04 Complete
+last_updated: "2026-04-07T09:00:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 100
+  completed_phases: 4
+  total_plans: 8
+  completed_plans: 8
+  percent: 67
 ---
 
 # Project State
 
 ## Current Phase
 
-Phase 02: Critical bug fixes — COMPLETE
+Phase 04: Live petrol price integration — COMPLETE
 
 ## Current Plan
 
@@ -26,6 +26,8 @@ Plan 02 of 02 — COMPLETE
 
 Phase 01: 2/2 plans complete [####################] 100%
 Phase 02: 2/2 plans complete [####################] 100%
+Phase 03: 2/2 plans complete [####################] 100%
+Phase 04: 2/2 plans complete [####################] 100%
 
 ## Accumulated Context
 
@@ -34,6 +36,8 @@ Phase 02: 2/2 plans complete [####################] 100%
 - Planning directory bootstrapped for routed app (existing codebase)
 - Phase 1 added: Port map enhancements — 3D terrain, tilt, topo/satellite toggle, attribution icon
 - Phase 2 complete: four critical bug fixes (BUG-FUEL, BUG-DATE, BUG-COORDS, BUG-CACHE)
+- Phase 3 complete: destination photos — curated Unsplash URLs, hero banners in cards and Mapbox popups
+- Phase 4 complete: live petrol price integration — fuelPrices.ts utility, Firestore caching, TripDetail fetch-on-mount, CostBreakdown override toggle
 
 ### Decisions Made
 
@@ -45,6 +49,9 @@ Phase 02: 2/2 plans complete [####################] 100%
 - (02-01) today const added inside both TripSheet and FormView function bodies — FormView is a separate top-level function requiring its own declaration
 - (02-02) SpotlightCard userHomeLocation prop uses current user's real coordinates for haversine fallback; -37.0/144.5 retained as null-guard fallback only
 - (02-02) destinations.length replaces hardcoded total:70 in checkAndBuildCache — progress bar auto-corrects when destinations array changes
+- (04-01) fuelprice.io API used (VITE_FUELPRICE_API_KEY) — dual-endpoint strategy, fallback to $2.30/$2.85 national average
+- (04-02) handleUpdateFuelPrices changed from Firestore write to local state only — override is session-only, not persisted
+- (04-02) Live testing skipped — trip voting flow is a pre-existing issue unrelated to phase 04
 
 ## Performance Metrics
 
@@ -54,8 +61,10 @@ Phase 02: 2/2 plans complete [####################] 100%
 | 01    | 02   | ~45 min  | 3     | 1     |
 | 02    | 01   | ~10 min  | 2     | 2     |
 | 02    | 02   | ~8 min   | 2     | 1     |
+| 04    | 01   | ~4 min   | 2     | 2     |
+| 04    | 02   | ~4 min   | 3     | 2     |
 
 ## Last Session
 
-- Stopped at: Completed phase 02 — all four critical bug fixes verified
-- Date: 2026-04-06
+- Stopped at: Completed phase 04 — live petrol price integration
+- Date: 2026-04-07
