@@ -6,6 +6,7 @@ import { auth, db, storage } from '../firebase'
 import { UserProfile, Vehicle, HomeLocation } from '../types'
 import { useTheme } from '../hooks/useTheme'
 import { getUserPhoto } from '../utils/userPhoto'
+import { MAPBOX_TOKEN } from '../config'
 
 interface ProfilePageProps {
   profile: UserProfile
@@ -151,7 +152,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
     setGeocoding(true)
     setGeocodeError(null)
     try {
-      const token = import.meta.env.VITE_MAPBOX_TOKEN
+      const token = MAPBOX_TOKEN
       const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(value.trim())}.json?country=AU&types=locality,place&access_token=${token}`
       const res = await fetch(url)
       if (!res.ok) throw new Error('Geocoding failed')

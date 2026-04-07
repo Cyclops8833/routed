@@ -3,6 +3,7 @@ import { User } from 'firebase/auth'
 import { doc, setDoc, Timestamp } from 'firebase/firestore'
 import { db } from '../firebase'
 import { UserProfile, Vehicle, HomeLocation } from '../types'
+import { MAPBOX_TOKEN } from '../config'
 
 interface OnboardingProps {
   user: User
@@ -113,7 +114,7 @@ export default function Onboarding({ user, existingProfile }: OnboardingProps) {
     setGeocoding(true)
     setGeocodeError(null)
     try {
-      const token = import.meta.env.VITE_MAPBOX_TOKEN
+      const token = MAPBOX_TOKEN
       const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(value.trim())}.json?country=AU&types=locality,place&access_token=${token}`
       const res = await fetch(url)
       if (!res.ok) throw new Error('Geocoding failed')
