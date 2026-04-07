@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth'
 import { initTheme } from './hooks/useTheme'
 import { useFCMSetup } from './hooks/useFCMSetup'
 import { useTripNotifications } from './hooks/useTripNotifications'
+import { useShameNotifications } from './hooks/useShameNotifications'
 import Layout from './components/Layout'
 import Landing from './pages/Landing'
 import Onboarding from './pages/Onboarding'
@@ -55,6 +56,8 @@ function AppContent() {
   useFCMSetup()
   // Trip notification triggers — D-04 (vote_requested), D-05 (trip_confirmed), D-07 (trip_approaching)
   useTripNotifications()
+  // Shame notifications — D-08 (72hr shame) + D-09 (daily follow-up)
+  useShameNotifications()
 
   if (loading) return <LoadingScreen />
 
