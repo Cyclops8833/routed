@@ -78,6 +78,10 @@ Plans:
 **Goal:** Add a React error boundary in `App.tsx` so render crashes show a recovery screen instead of a blank app. Add `firestore.rules` to the repo and deploy via Firebase CLI with `request.auth.uid` guards on write operations. Replace `window.__routedPlanTrip` global bridge with a Mapbox `popup.on('open')` JS event handler. Consolidate Mapbox token to import from `src/config.ts` everywhere.
 **Requirements**: SEC-BOUNDARY, SEC-RULES, SEC-BRIDGE, SEC-TOKEN
 **Depends on:** Phase 5
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [x] 06-01-PLAN.md — Error boundary component + Firestore security rules
+- [x] 06-02-PLAN.md — Remove window.__routedPlanTrip global bridge + consolidate Mapbox token imports
 
 ---
