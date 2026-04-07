@@ -53,7 +53,7 @@ Plans:
 **Goal:** Fix the ability to move a planned trip to voting state so the full trip lifecycle (plan -> vote -> confirm) works end-to-end. Unblocks manual UAT for Phase 4 and all future trip lifecycle testing.
 **Requirements**: VOTE-NAV, VOTE-ERR, VOTE-ATTENDEE
 **Depends on:** Phase 4
-**Plans:** 1 plan
+**Plans:** 0/1 plans executed
 
 Plans:
 - [ ] 04.1-01-PLAN.md — Fix TripSheet post-creation navigation, error feedback, and attendees guard
@@ -63,7 +63,13 @@ Plans:
 **Goal:** Eliminate the 7 duplicate `getDocs(collection(db, 'users'))` calls by creating a shared `CrewContext` with a single `onSnapshot` subscription. Move user avatar photos from base64 Firestore blobs to Firebase Storage download URLs. Wrap `DestinationCard` and `SpotlightCard` in `React.memo`. Save drive cache incrementally per batch rather than only on full completion.
 **Requirements**: PERF-CREW-CTX, PERF-AVATAR, PERF-MEMO, PERF-CACHE
 **Depends on:** Phase 3
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [x] 05-01-PLAN.md — CrewContext: single onSnapshot subscription, migrate all 7 callsites
+- [x] 05-02-PLAN.md — Avatar migration: Firebase Storage upload, lazy base64 migration
+- [x] 05-03-PLAN.md — React.memo: extract SpotlightCard, memoize DestinationCard, useCallback on handleSpotlightTap
+- [x] 05-04-PLAN.md — Drive cache: incremental batch saves and partial resume
 
 ---
 
