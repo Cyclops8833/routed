@@ -70,35 +70,18 @@ export async function saveFuelPriceCache(
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Maps a suburb string to a city name for the fuelprice.io API.
- * Always returns 'Melbourne' — all Routed users are Victorian and regional
- * price variance is not worth the added complexity (per D-02).
- */
-function resolveCity(_suburb: string): string {
-  return 'Melbourne'
-}
-
 // ---------------------------------------------------------------------------
 // Primary fetch function
 // ---------------------------------------------------------------------------
 
 /**
- * Fetches current Melbourne petrol and diesel prices from fuelprice.io.
- *
- * Strategy:
- * 1. If VITE_FUELPRICE_API_KEY is not set, returns FALLBACK_PRICES immediately.
- * 2. Tries the legacy query-string endpoint first, then the v1 RESTful endpoint.
- * 3. If both endpoints fail or return unexpected data, returns FALLBACK_PRICES.
- * 4. On any unexpected error, logs and returns FALLBACK_PRICES.
- *
- * The suburb argument is used to resolve a city name (always 'Melbourne' per D-02).
- * Callers should check isEstimated to know whether the price is live or fallback.
+ * Fetches current Victorian petrol and diesel prices via the Servo Saver
+ * (Service Victoria) proxy. Suburb is unused — all users are Victorian and
+ * the API returns state-wide data averaged across all stations (per D-02).
  */
-export async function fetchFuelPrices(suburb: string): Promise<LiveFuelPrices> {
+export async function fetchFuelPrices(_suburb: string): Promise<LiveFuelPrices> {
   try {
-    const city = resolveCity(suburb)
-    const res = await fetch(`/api/fuel-prices?city=${encodeURIComponent(city)}`)
+    const res = await fetch('/api/fuel-prices')
     if (!res.ok) {
       console.warn('fuel-prices proxy returned', res.status, '— using fallback')
       return FALLBACK_PRICES

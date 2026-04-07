@@ -1,59 +1,50 @@
 /**
- * Vercel Edge Function — server-side proxy for fuelprice.io
+ * Vercel Edge Function — Servo Saver (Service Victoria) fuel price proxy.
  * Avoids CORS issues with direct browser requests.
- * Called by fuelPrices.ts as /api/fuel-prices?city=Melbourne
+ * Called by fuelPrices.ts as /api/fuel-prices
  */
 export const config = { runtime: 'edge' }
 
 export default async function handler(req: Request): Promise<Response> {
-  const apiKey = process.env.VITE_FUELPRICE_API_KEY
-  if (!apiKey) {
-    return Response.json({ error: 'VITE_FUELPRICE_API_KEY not configured' }, { status: 500 })
+  const consumerId = process.env.VITE_SERVO_SAVER_CONSUMER_ID
+  if (!consumerId) {
+    return Response.json({ error: 'VITE_SERVO_SAVER_CONSUMER_ID not configured' }, { status: 500 })
   }
 
-  const city = new URL(req.url).searchParams.get('city') ?? 'Melbourne'
-
-  // Attempt 1: legacy endpoint
   try {
-    const [pRes, dRes] = await Promise.all([
-      fetch(`https://fuelprice.io/api/?key=${apiKey}&action=get_city_average&fuel_type=unleaded&city=${encodeURIComponent(city)}`),
-      fetch(`https://fuelprice.io/api/?key=${apiKey}&action=get_city_average&fuel_type=diesel&city=${encodeURIComponent(city)}`),
-    ])
-    if (pRes.ok && dRes.ok) {
-      const [pd, dd] = await Promise.all([pRes.json() as Promise<{ average?: number }>, dRes.json() as Promise<{ average?: number }>])
-      if (typeof pd.average === 'number' && pd.average > 0 && typeof dd.average === 'number' && dd.average > 0) {
-        return Response.json({ petrol: pd.average / 100, diesel: dd.average / 100 })
-      }
-    }
-  } catch {
-    // fall through to v1
-  }
-
-  // Attempt 2: v1 endpoint
-  try {
-    const citiesRes = await fetch('https://api.fuelprice.io/v1/cities', {
-      headers: { Authorization: `Bearer ${apiKey}` },
+    const res = await fetch('https://api.fuel.service.vic.gov.au/open-data/v1/fuel/prices', {
+      headers: {
+        'x-consumer-id': consumerId,
+        'x-transactionid': crypto.randomUUID(),
+        'User-Agent': 'Routed/1.0',
+      },
     })
-    if (citiesRes.ok) {
-      const cities = (await citiesRes.json()) as Array<{ id: string; name: string }>
-      const melbourne = cities.find((c) => c.name.toLowerCase().includes('melbourne'))
-      if (melbourne) {
-        const avgRes = await fetch(`https://api.fuelprice.io/v1/cities/${melbourne.id}/average`, {
-          headers: { Authorization: `Bearer ${apiKey}` },
-        })
-        if (avgRes.ok) {
-          const avgData = (await avgRes.json()) as { unleaded?: number; diesel?: number }
-          if (typeof avgData.unleaded === 'number' && avgData.unleaded > 0 && typeof avgData.diesel === 'number' && avgData.diesel > 0) {
-            const petrol = avgData.unleaded > 10 ? avgData.unleaded / 100 : avgData.unleaded
-            const diesel = avgData.diesel > 10 ? avgData.diesel / 100 : avgData.diesel
-            return Response.json({ petrol, diesel })
-          }
-        }
+    if (!res.ok) return Response.json({ error: `upstream ${res.status}` }, { status: 502 })
+
+    const data = await res.json() as {
+      fuelPriceDetails: Array<{
+        fuelPrices: Array<{ fuelType: string; price: number; isAvailable: boolean }>
+      }>
+    }
+
+    const petrolCents: number[] = []
+    const dieselCents: number[] = []
+
+    for (const station of data.fuelPriceDetails) {
+      for (const fp of station.fuelPrices) {
+        if (!fp.isAvailable || typeof fp.price !== 'number' || fp.price <= 0) continue
+        if (fp.fuelType === 'U91') petrolCents.push(fp.price)
+        if (fp.fuelType === 'DSL') dieselCents.push(fp.price)
       }
     }
-  } catch {
-    // both failed
-  }
 
-  return Response.json({ error: 'upstream failed' }, { status: 502 })
+    if (petrolCents.length === 0 || dieselCents.length === 0) {
+      return Response.json({ error: 'no price data' }, { status: 502 })
+    }
+
+    const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length
+    return Response.json({ petrol: avg(petrolCents) / 100, diesel: avg(dieselCents) / 100 })
+  } catch {
+    return Response.json({ error: 'upstream failed' }, { status: 502 })
+  }
 }

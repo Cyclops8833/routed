@@ -3,68 +3,56 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import type { Plugin } from 'vite'
 
-/** Dev-only: proxy /api/fuel-prices to fuelprice.io server-side to avoid CORS */
-function fuelPriceDevProxy(apiKey: string): Plugin {
+/** Dev-only: proxy /api/fuel-prices to Servo Saver (Service Victoria) to avoid CORS */
+function fuelPriceDevProxy(consumerId: string): Plugin {
   return {
     name: 'fuel-price-dev-proxy',
     configureServer(server) {
-      server.middlewares.use('/api/fuel-prices', async (req, res) => {
-        if (!apiKey) {
+      server.middlewares.use('/api/fuel-prices', async (_req, res) => {
+        if (!consumerId) {
           res.writeHead(500, { 'Content-Type': 'application/json' })
-          res.end(JSON.stringify({ error: 'VITE_FUELPRICE_API_KEY not set' }))
+          res.end(JSON.stringify({ error: 'VITE_SERVO_SAVER_CONSUMER_ID not set' }))
           return
         }
-        const url = new URL(req.url ?? '/', 'http://localhost')
-        const city = url.searchParams.get('city') ?? 'Melbourne'
-        const browserHeaders = {
-          'User-Agent': 'Mozilla/5.0 (compatible; Routed/1.0)',
-          'Accept': 'application/json',
-        }
-
-        // Attempt 1: v1 Bearer endpoint
         try {
-          const citiesRes = await fetch('https://api.fuelprice.io/v1/cities', {
-            headers: { ...browserHeaders, Authorization: `Bearer ${apiKey}` },
+          const upstream = await fetch('https://api.fuel.service.vic.gov.au/open-data/v1/fuel/prices', {
+            headers: {
+              'x-consumer-id': consumerId,
+              'x-transactionid': crypto.randomUUID(),
+              'User-Agent': 'Routed/1.0',
+            },
           })
-          if (citiesRes.ok) {
-            const cities = await citiesRes.json() as Array<{ id: string; name: string }>
-            const melbourne = cities.find((c) => c.name.toLowerCase().includes('melbourne'))
-            if (melbourne) {
-              const avgRes = await fetch(`https://api.fuelprice.io/v1/cities/${melbourne.id}/average`, {
-                headers: { ...browserHeaders, Authorization: `Bearer ${apiKey}` },
-              })
-              if (avgRes.ok) {
-                const avg = await avgRes.json() as { unleaded?: number; diesel?: number }
-                if (typeof avg.unleaded === 'number' && avg.unleaded > 0 && typeof avg.diesel === 'number' && avg.diesel > 0) {
-                  const petrol = avg.unleaded > 10 ? avg.unleaded / 100 : avg.unleaded
-                  const diesel = avg.diesel > 10 ? avg.diesel / 100 : avg.diesel
-                  res.writeHead(200, { 'Content-Type': 'application/json' })
-                  res.end(JSON.stringify({ petrol, diesel }))
-                  return
-                }
-              }
+          if (!upstream.ok) {
+            res.writeHead(502, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ error: `upstream ${upstream.status}` }))
+            return
+          }
+          const data = await upstream.json() as {
+            fuelPriceDetails: Array<{
+              fuelPrices: Array<{ fuelType: string; price: number; isAvailable: boolean }>
+            }>
+          }
+          const petrolCents: number[] = []
+          const dieselCents: number[] = []
+          for (const station of data.fuelPriceDetails) {
+            for (const fp of station.fuelPrices) {
+              if (!fp.isAvailable || typeof fp.price !== 'number' || fp.price <= 0) continue
+              if (fp.fuelType === 'U91') petrolCents.push(fp.price)
+              if (fp.fuelType === 'DSL') dieselCents.push(fp.price)
             }
           }
-        } catch { /* fall through */ }
-
-        // Attempt 2: legacy endpoint
-        try {
-          const [pRes, dRes] = await Promise.all([
-            fetch(`https://fuelprice.io/api/?key=${apiKey}&action=get_city_average&fuel_type=unleaded&city=${encodeURIComponent(city)}`, { headers: browserHeaders }),
-            fetch(`https://fuelprice.io/api/?key=${apiKey}&action=get_city_average&fuel_type=diesel&city=${encodeURIComponent(city)}`, { headers: browserHeaders }),
-          ])
-          if (pRes.ok && dRes.ok) {
-            const [pdj, ddj] = await Promise.all([pRes.json() as Promise<{ average?: number }>, dRes.json() as Promise<{ average?: number }>])
-            if (typeof pdj.average === 'number' && pdj.average > 0 && typeof ddj.average === 'number' && ddj.average > 0) {
-              res.writeHead(200, { 'Content-Type': 'application/json' })
-              res.end(JSON.stringify({ petrol: pdj.average / 100, diesel: ddj.average / 100 }))
-              return
-            }
+          if (petrolCents.length === 0 || dieselCents.length === 0) {
+            res.writeHead(502, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify({ error: 'no price data' }))
+            return
           }
-        } catch { /* fall through */ }
-
-        res.writeHead(502, { 'Content-Type': 'application/json' })
-        res.end(JSON.stringify({ error: 'upstream failed' }))
+          const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length
+          res.writeHead(200, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({ petrol: avg(petrolCents) / 100, diesel: avg(dieselCents) / 100 }))
+        } catch {
+          res.writeHead(502, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({ error: 'upstream failed' }))
+        }
       })
     },
   }
@@ -75,7 +63,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
-      fuelPriceDevProxy(env.VITE_FUELPRICE_API_KEY ?? ''),
+      fuelPriceDevProxy(env.VITE_SERVO_SAVER_CONSUMER_ID ?? ''),
       VitePWA({
         registerType: 'autoUpdate',
         workbox: {
