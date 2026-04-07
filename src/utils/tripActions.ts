@@ -1,8 +1,11 @@
-import { doc, updateDoc, deleteDoc, collection, getDocs, Timestamp } from 'firebase/firestore'
+import { doc, updateDoc, deleteDoc, collection, getDocs, Timestamp, serverTimestamp } from 'firebase/firestore'
 import { db } from '../firebase'
 
 export async function openVoting(tripId: string, deadline?: Date): Promise<void> {
-  const updates: Record<string, unknown> = { status: 'voting' }
+  const updates: Record<string, unknown> = {
+    status: 'voting',
+    votingStartedAt: serverTimestamp(),
+  }
   if (deadline) {
     updates.votingDeadline = deadline.toISOString()
   }

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { initTheme } from './hooks/useTheme'
 import { useFCMSetup } from './hooks/useFCMSetup'
+import { useTripNotifications } from './hooks/useTripNotifications'
 import Layout from './components/Layout'
 import Landing from './pages/Landing'
 import Onboarding from './pages/Onboarding'
@@ -52,6 +53,8 @@ function AppContent() {
   const { user, profile, loading, authError } = useAuth()
   // FCM token registration — runs on auth state change (D-02); safe to call unconditionally
   useFCMSetup()
+  // Trip notification triggers — D-04 (vote_requested), D-05 (trip_confirmed), D-07 (trip_approaching)
+  useTripNotifications()
 
   if (loading) return <LoadingScreen />
 
