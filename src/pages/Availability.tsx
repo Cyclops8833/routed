@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
-import { auth } from '../firebase'
-import { useCrewContext } from '../contexts/CrewContext'
+import { collection, getDocs } from 'firebase/firestore'
+import { auth, db } from '../firebase'
 import type { UserProfile } from '../types'
 import { longWeekends, type LongWeekend } from '../data/longWeekends'
 import {
@@ -206,8 +206,8 @@ function WeekendCard({ lw, allMembers, currentUid, availabilityData }: WeekendCa
 }
 
 export default function AvailabilityPage() {
-  const { allUsers: allMembers } = useCrewContext()
   const [currentUid, setCurrentUid] = useState<string | null>(null)
+  const [allMembers, setAllMembers] = useState<UserProfile[]>([])
   const [availabilityData, setAvailabilityData] = useState<Availability[]>([])
   const [showCustomPicker, setShowCustomPicker] = useState(false)
   const [customStart, setCustomStart] = useState('')
@@ -223,6 +223,12 @@ export default function AvailabilityPage() {
       setCurrentUid(user?.uid ?? null)
     })
     return unsub
+  }, [])
+
+  useEffect(() => {
+    getDocs(collection(db, 'users'))
+      .then((snap) => setAllMembers(snap.docs.map((d) => d.data() as UserProfile)))
+      .catch(() => {})
   }, [])
 
   useEffect(() => {

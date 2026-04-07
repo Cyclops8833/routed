@@ -1,24 +1,24 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { collection, getDocs, getDoc, doc, query, where, onSnapshot } from 'firebase/firestore'
-import { useCrewContext } from '../contexts/CrewContext'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { onAuthStateChanged } from 'firebase/auth'
 import { db, auth } from '../firebase'
 import { MAPBOX_TOKEN } from '../config'
-import type { UserProfile, HomeLocation } from '../types'
+import type { UserProfile } from '../types'
 import TripSheet from '../components/TripSheet'
 import QuickPlanSheet from '../components/QuickPlanSheet'
 import DirectTripSheet from '../components/DirectTripSheet'
 import { addDestinationDots } from '../utils/mapDestinations'
 import { getSpotlightDestinations } from '../utils/spotlight'
-import { isCacheValid, buildDriveCache, saveDriveCache, formatDriveTime } from '../utils/driveCache'
+import { isCacheValid, buildDriveCache, saveDriveCache } from '../utils/driveCache'
 import { fetchRoutes, drawRoutes } from '../utils/mapRoutes'
 import type { DriveCache } from '../types'
 import { destinations } from '../data/destinations'
 import type { Destination } from '../data/destinations'
 import TopoPattern from '../components/TopoPattern'
+import SpotlightCard from '../components/SpotlightCard'
 // Key must match the one exported from Trips.tsx
 const PENDING_DATES_KEY = 'routed-pending-trip-dates'
 const WELCOME_SEEN_KEY = 'routed-welcome-seen'
@@ -114,109 +114,8 @@ function buildPopupHTML(member: UserProfile): string {
 type SheetMode = 'closed' | 'full' | 'peek'
 type PlanMode = 'picker' | 'quick' | 'manual' | 'destination'
 
-function SpotlightCard({
-  dest,
-  driveCache,
-  userHomeLocation,
-  onTap,
-}: {
-  dest: Destination
-  driveCache: DriveCache | null
-  userHomeLocation: HomeLocation | null
-  onTap: (dest: Destination) => void
-}) {
-  const cached = driveCache?.[dest.id]
-  const driveLabel = cached
-    ? `${formatDriveTime(cached.durationMinutes)} from you`
-    : `~${Math.round((() => {
-        const R = 6371, lat1 = userHomeLocation?.lat ?? -37.0, lng1 = userHomeLocation?.lng ?? 144.5
-        const dLat = ((dest.lat - lat1) * Math.PI) / 180
-        const dLng = ((dest.lng - lng1) * Math.PI) / 180
-        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(dest.lat*Math.PI/180)*Math.sin(dLng/2)**2
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) / 100
-      })() * 10) / 10}hr drive`
-  const acts = dest.activities.slice(0, 2).map((a) => {
-    if (a === 'camping') return '🏕️'
-    if (a === 'hiking') return '🥾'
-    if (a === 'fishing') return '🎣'
-    if (a === '4wd') return '🚙'
-    return ''
-  })
-
-  return (
-    <button
-      onClick={() => onTap(dest)}
-      style={{
-        width: '180px',
-        minWidth: '180px',
-        height: '100px',
-        borderRadius: '12px',
-        background: 'rgba(255,255,255,0.92)',
-        border: '1px solid rgba(74,103,65,0.2)',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
-        padding: '10px 12px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        gap: '4px',
-        cursor: 'pointer',
-        textAlign: 'left',
-        flexShrink: 0,
-        backdropFilter: 'blur(4px)',
-        WebkitBackdropFilter: 'blur(4px)',
-        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget
-        el.style.transform = 'translateY(-2px)'
-        el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.18)'
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget
-        el.style.transform = ''
-        el.style.boxShadow = '0 2px 10px rgba(0,0,0,0.12)'
-      }}
-    >
-      <div style={{
-        fontFamily: 'Fraunces, Georgia, serif',
-        fontSize: '13px',
-        fontWeight: '700',
-        color: '#2D2D2D',
-        lineHeight: 1.25,
-        overflow: 'hidden',
-        display: '-webkit-box',
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: 'vertical' as const,
-        maxHeight: '32px',
-      }}>
-        {dest.name}
-      </div>
-      <div style={{
-        fontSize: '10px',
-        fontWeight: '600',
-        background: 'rgba(74,103,65,0.1)',
-        color: '#4A6741',
-        borderRadius: '100px',
-        padding: '1px 6px',
-        fontFamily: 'DM Sans, system-ui, sans-serif',
-      }}>
-        {dest.region}
-      </div>
-      <div style={{
-        fontFamily: 'DM Sans, system-ui, sans-serif',
-        fontSize: '11px',
-        color: '#8C8578',
-        marginTop: '2px',
-      }}>
-        {driveLabel} · {acts.join(' ')}
-      </div>
-    </button>
-  )
-}
-
 export default function MapPage() {
   const location = useLocation()
-  const { allUsers } = useCrewContext()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const markersRef = useRef<mapboxgl.Marker[]>([])
@@ -471,58 +370,67 @@ export default function MapPage() {
     checkAndBuildCache()
   }, [currentUid])
 
-  // Keep crewMembersRef in sync with context so Mapbox popup closures always read latest
+  // Load crew and place markers once map is loaded
   useEffect(() => {
-    crewMembersRef.current = allUsers
-  }, [allUsers])
-
-  // Place crew markers once map is loaded and allUsers has data
-  useEffect(() => {
-    if (!mapLoaded || allUsers.length === 0) return
+    if (!mapLoaded) return
 
     const map = mapRef.current
     if (!map) return
 
-    const profiles = [...allUsers].sort((a, b) => a.uid.localeCompare(b.uid))
+    async function loadCrewMarkers() {
+      try {
+        const snap = await getDocs(collection(db, 'users'))
+        const profiles = snap.docs
+          .map((d) => d.data() as UserProfile)
+          .sort((a, b) => a.uid.localeCompare(b.uid))
 
-    const membersWithLocation = profiles.filter(
-      (p) => p.homeLocation && typeof p.homeLocation.lat === 'number' && typeof p.homeLocation.lng === 'number'
-    )
+        // Store for popup use
+        crewMembersRef.current = profiles
 
-    // Clear existing markers
-    for (const marker of markersRef.current) {
-      marker.remove()
+        const membersWithLocation = profiles.filter(
+          (p) => p.homeLocation && typeof p.homeLocation.lat === 'number' && typeof p.homeLocation.lng === 'number'
+        )
+
+        // Clear existing markers
+        for (const marker of markersRef.current) {
+          marker.remove()
+        }
+        markersRef.current = []
+
+        if (membersWithLocation.length === 0) {
+          setCrewLoaded(true)
+          return
+        }
+
+        const bounds = new mapboxgl.LngLatBounds()
+
+        membersWithLocation.forEach((member, index) => {
+          const colour = CREW_COLOURS[index % CREW_COLOURS.length]
+          const el = createMarkerElement(member, colour)
+          const popup = new mapboxgl.Popup({ offset: 20, maxWidth: '220px' }).setHTML(
+            buildPopupHTML(member)
+          )
+          const marker = new mapboxgl.Marker({ element: el })
+            .setLngLat([member.homeLocation!.lng, member.homeLocation!.lat])
+            .setPopup(popup)
+            .addTo(map!)
+
+          markersRef.current.push(marker)
+          bounds.extend([member.homeLocation!.lng, member.homeLocation!.lat])
+        })
+
+        if (membersWithLocation.length > 0) {
+          map!.fitBounds(bounds, { padding: 80, maxZoom: 10 })
+        }
+      } catch (err) {
+        console.error('Failed to load crew markers:', err)
+      } finally {
+        setCrewLoaded(true)
+      }
     }
-    markersRef.current = []
 
-    if (membersWithLocation.length === 0) {
-      setCrewLoaded(true)
-      return
-    }
-
-    const bounds = new mapboxgl.LngLatBounds()
-
-    membersWithLocation.forEach((member, index) => {
-      const colour = CREW_COLOURS[index % CREW_COLOURS.length]
-      const el = createMarkerElement(member, colour)
-      const popup = new mapboxgl.Popup({ offset: 20, maxWidth: '220px' }).setHTML(
-        buildPopupHTML(member)
-      )
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([member.homeLocation!.lng, member.homeLocation!.lat])
-        .setPopup(popup)
-        .addTo(map)
-
-      markersRef.current.push(marker)
-      bounds.extend([member.homeLocation!.lng, member.homeLocation!.lat])
-    })
-
-    if (membersWithLocation.length > 0) {
-      map.fitBounds(bounds, { padding: 80, maxZoom: 10 })
-    }
-
-    setCrewLoaded(true)
-  }, [mapLoaded, allUsers])
+    loadCrewMarkers()
+  }, [mapLoaded])
 
   // Draw routes when navigated from TripDetail with focusDestId — no sheet, just lines
   useEffect(() => {
@@ -639,11 +547,11 @@ export default function MapPage() {
     }, 300)
   }
 
-  const handleSpotlightTap = (dest: Destination) => {
+  const handleSpotlightTap = useCallback((dest: Destination) => {
     const map = mapRef.current
     if (!map) return
     map.flyTo({ center: [dest.lng, dest.lat], zoom: 10 })
-  }
+  }, [])
 
   const handleSpotlightShuffle = () => {
     const newDests = getSpotlightDestinations(true)
