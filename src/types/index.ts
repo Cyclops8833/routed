@@ -1,3 +1,5 @@
+import type { Timestamp } from 'firebase/firestore'
+
 export interface Vehicle {
   id: string
   name: string
@@ -32,6 +34,11 @@ export interface UserProfile {
   onboardingComplete: boolean
   driveCache?: DriveCache
   driveCacheLocation?: { lat: number; lng: number }
+  fuelPriceCache?: {
+    petrol: number
+    diesel: number
+    cachedAt: Timestamp
+  }
 }
 
 export interface Vote {

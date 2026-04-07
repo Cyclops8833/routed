@@ -44,11 +44,7 @@ Plans:
 **Goal:** Replace the manual `fuelPrices` field in trip `costConfig` with live average fuel prices fetched from a national Australian petrol price API (researched during plan phase), keyed to each user's homebase suburb/postcode. Fuel cost in TripDetail and CostBreakdown should reflect current market price, not a stale manual entry. Cache price per user for 24 hours in Firestore.
 **Requirements**: FUEL-API, FUEL-CACHE, FUEL-COST
 **Depends on:** Phase 2
-**Plans:** 2 plans
-
-Plans:
-- [ ] 04-01-PLAN.md — Types and fuelPrices.ts utility (fetch, cache, fallback)
-- [ ] 04-02-PLAN.md — Wire into TripDetail and CostBreakdown (live display, override toggle, est. label)
+**Plans:** TBD
 
 ---
 
