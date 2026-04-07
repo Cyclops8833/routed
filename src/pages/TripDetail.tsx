@@ -957,22 +957,29 @@ export default function TripDetailPage() {
                   Ready to vote?
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <input
-                    type="datetime-local"
-                    value={deadlineInput}
-                    onChange={(e) => setDeadlineInput(e.target.value)}
-                    style={{
-                      fontFamily: 'DM Sans, system-ui, sans-serif',
-                      fontSize: '13px',
-                      padding: '8px 10px',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: '8px',
-                      background: 'var(--color-base)',
-                      color: 'var(--color-charcoal)',
-                      outline: 'none',
-                    }}
-                    placeholder="Deadline (optional)"
-                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' }}>
+                    <label style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '11px', fontWeight: '600', color: 'var(--color-stone)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Voting deadline <span style={{ fontWeight: '400', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={deadlineInput}
+                      onChange={(e) => setDeadlineInput(e.target.value)}
+                      style={{
+                        fontFamily: 'DM Sans, system-ui, sans-serif',
+                        fontSize: '14px',
+                        padding: '10px 12px',
+                        border: '1.5px solid var(--color-border)',
+                        borderRadius: '10px',
+                        background: 'var(--color-surface)',
+                        color: 'var(--color-charcoal)',
+                        outline: 'none',
+                        colorScheme: 'light dark',
+                        width: '100%',
+                        boxSizing: 'border-box' as const,
+                      }}
+                    />
+                  </div>
                   <button
                     onClick={handleOpenVoting}
                     disabled={openingVoting}

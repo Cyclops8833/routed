@@ -91,8 +91,7 @@ export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDrag
 
         setCrewMembers(profiles)
         setAttendeeColours(colours)
-        // Default: all checked
-        setSelectedAttendees(new Set(profiles.map((p) => p.uid)))
+        // Default: nobody selected — user opts in who's coming
       } catch (err) {
         console.error('Failed to load crew:', err)
       } finally {
@@ -347,7 +346,9 @@ export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDrag
             right: 0,
             background: 'var(--color-surface)',
             borderTop: '1px solid var(--color-border)',
-            padding: '16px 20px',
+            paddingTop: '16px',
+            paddingLeft: '20px',
+            paddingRight: '20px',
             paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
           }}
         >
