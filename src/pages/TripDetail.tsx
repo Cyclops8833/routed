@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   doc,
@@ -22,7 +22,7 @@ import type { LiveFuelPrices } from '../utils/fuelPrices'
 import CostBreakdown from '../components/CostBreakdown'
 import VotingPanel from '../components/VotingPanel'
 import { openVoting, startTrip, completeTrip, cancelTrip, reopenVoting } from '../utils/tripActions'
-import { getDocs, query, where } from 'firebase/firestore'
+import { useCrewContext } from '../contexts/CrewContext'
 
 // ────────────────────────────────────────────────────────────
 // Types
@@ -143,11 +143,11 @@ export default function TripDetailPage() {
   const { tripId } = useParams<{ tripId: string }>()
   const navigate = useNavigate()
 
+  const { allUsers } = useCrewContext()
   const [trip, setTrip] = useState<Trip | null>(null)
   const [tripLoading, setTripLoading] = useState(true)
   const [currentUid, setCurrentUid] = useState<string | null>(null)
   const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(null)
-  const [attendeeProfiles, setAttendeeProfiles] = useState<UserProfile[]>([])
   const [checklist, setChecklist] = useState<ChecklistItem[]>([])
   const [comments, setComments] = useState<Comment[]>([])
   const [newCheckItem, setNewCheckItem] = useState('')
@@ -199,26 +199,11 @@ export default function TripDetailPage() {
     return unsub
   }, [tripId])
 
-  // ── Load attendee profiles ──
-  useEffect(() => {
-    if (!trip || trip.attendees.length === 0) return
-
-    async function loadProfiles() {
-      if (!trip) return
-      try {
-        const q = query(
-          collection(db, 'users'),
-          where('uid', 'in', trip.attendees.slice(0, 10))
-        )
-        const snap = await getDocs(q)
-        setAttendeeProfiles(snap.docs.map((d) => d.data() as UserProfile))
-      } catch (err) {
-        console.error('Failed to load attendee profiles:', err)
-      }
-    }
-
-    loadProfiles()
-  }, [trip?.attendees.join(',')])
+  // ── Derive attendee profiles from context ──
+  const attendeeProfiles = useMemo(() => {
+    if (!trip) return []
+    return allUsers.filter((u) => trip.attendees.includes(u.uid))
+  }, [allUsers, trip?.attendees.join(',')])
 
   // ── Fetch live fuel prices — uses creator's cached or fresh price (per D-06) ──
   useEffect(() => {

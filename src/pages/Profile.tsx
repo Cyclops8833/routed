@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { signOut } from 'firebase/auth'
 import { doc, setDoc, updateDoc } from 'firebase/firestore'
-import { auth, db } from '../firebase'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { auth, db, storage } from '../firebase'
 import { UserProfile, Vehicle, HomeLocation } from '../types'
 import { useTheme } from '../hooks/useTheme'
 import { getUserPhoto } from '../utils/userPhoto'
@@ -103,6 +104,28 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [customPhoto, setCustomPhoto] = useState<string | null>(profile.customPhotoURL ?? null)
   const [photoUploading, setPhotoUploading] = useState(false)
+
+  // Lazy migration: if customPhotoURL is a legacy base64 blob, upload it to Storage
+  useEffect(() => {
+    if (!profile.customPhotoURL?.startsWith('data:')) return
+
+    async function migrateAvatar() {
+      try {
+        const res = await fetch(profile.customPhotoURL!)
+        const blob = await res.blob()
+        const storageRef = ref(storage, `avatars/${profile.uid}.jpg`)
+        await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' })
+        const downloadURL = await getDownloadURL(storageRef)
+        await updateDoc(doc(db, 'users', profile.uid), { customPhotoURL: downloadURL })
+        setCustomPhoto(downloadURL)
+      } catch (err) {
+        console.error('Avatar migration failed — will retry on next load:', err)
+      }
+    }
+
+    migrateAvatar()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // Intentionally runs once on mount; profile.customPhotoURL is a stable prop
 
   const [vehicles, setVehicles] = useState<VehicleForm[]>(
     profile.vehicles.map((v) => ({
@@ -223,8 +246,14 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
     setPhotoUploading(true)
     try {
       const dataUri = await processImage(file)
-      await updateDoc(doc(db, 'users', profile.uid), { customPhotoURL: dataUri })
-      setCustomPhoto(dataUri)
+      // Convert base64 data URI to Blob for Storage upload
+      const res = await fetch(dataUri)
+      const blob = await res.blob()
+      const storageRef = ref(storage, `avatars/${profile.uid}.jpg`)
+      await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' })
+      const downloadURL = await getDownloadURL(storageRef)
+      await updateDoc(doc(db, 'users', profile.uid), { customPhotoURL: downloadURL })
+      setCustomPhoto(downloadURL)
     } catch (err) {
       console.error('Photo upload failed:', err)
     } finally {
