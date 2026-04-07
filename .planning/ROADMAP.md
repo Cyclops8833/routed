@@ -50,13 +50,13 @@ Plans:
 
 ### Phase 04.1: Trip voting flow (INSERTED)
 
-**Goal:** Fix the ability to move a planned trip to voting state so the full trip lifecycle (plan → vote → confirm) works end-to-end. Unblocks manual UAT for Phase 4 and all future trip lifecycle testing.
-**Requirements**: TBD
+**Goal:** Fix the ability to move a planned trip to voting state so the full trip lifecycle (plan -> vote -> confirm) works end-to-end. Unblocks manual UAT for Phase 4 and all future trip lifecycle testing.
+**Requirements**: VOTE-NAV, VOTE-ERR, VOTE-ATTENDEE
 **Depends on:** Phase 4
-**Plans:** TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 04.1 to break down)
+- [ ] 04.1-01-PLAN.md — Fix TripSheet post-creation navigation, error feedback, and attendees guard
 
 ### Phase 5: Performance foundation
 
