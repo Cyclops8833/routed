@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
-import { collection, getDoc, doc, query, where, onSnapshot } from 'firebase/firestore'
+import { collection, getDocs, getDoc, doc, query, where, onSnapshot } from 'firebase/firestore'
 import { useCrewContext } from '../contexts/CrewContext'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
