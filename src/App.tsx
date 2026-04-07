@@ -9,7 +9,6 @@ import TripsPage from './pages/Trips'
 import CrewPage from './pages/Crew'
 import ProfilePage from './pages/Profile'
 import { NotificationProvider } from './contexts/NotificationContext'
-import { CrewProvider } from './contexts/CrewContext'
 
 const MapPage = lazy(() => import('./pages/Map'))
 const TripDetailPage = lazy(() => import('./pages/TripDetail'))
@@ -81,11 +80,9 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <CrewProvider>
-        <NotificationProvider>
-          <AppContent />
-        </NotificationProvider>
-      </CrewProvider>
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
     </BrowserRouter>
   )
 }

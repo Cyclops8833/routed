@@ -4,8 +4,7 @@
  * then collects: trip name, date range, crew. Submits immediately.
  */
 import { useState, useEffect } from 'react'
-import { collection, addDoc, Timestamp } from 'firebase/firestore'
-import { useCrewContext } from '../contexts/CrewContext'
+import { collection, getDocs, addDoc, Timestamp } from 'firebase/firestore'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../firebase'
 import { destinations } from '../data/destinations'
@@ -35,7 +34,6 @@ export default function DirectTripSheet({
 }: DirectTripSheetProps) {
   const navigate = useNavigate()
   const dest = destinations.find((d) => d.id === destinationId)
-  const { allUsers } = useCrewContext()
 
   const [crewMembers, setCrewMembers] = useState<UserProfile[]>([])
   const [selectedAttendees, setSelectedAttendees] = useState<Set<string>>(new Set())
@@ -45,12 +43,14 @@ export default function DirectTripSheet({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Sync crew from context
+  // Load crew
   useEffect(() => {
-    const profiles = allUsers
-    setCrewMembers(profiles)
-    setSelectedAttendees(new Set(profiles.map((p) => p.uid)))
-  }, [allUsers])
+    getDocs(collection(db, 'users')).then((snap) => {
+      const profiles = snap.docs.map((d) => d.data() as UserProfile)
+      setCrewMembers(profiles)
+      setSelectedAttendees(new Set(profiles.map((p) => p.uid)))
+    }).catch(() => {})
+  }, [])
 
   if (!dest) {
     return (

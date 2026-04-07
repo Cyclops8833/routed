@@ -65,20 +65,25 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Fetches drive times from a home location to all destinations.
- * Batches calls in groups of BATCH_SIZE with a delay between batches.
+ * Accepts an optional existing partial cache to resume from (D-13).
+ * Persists to Firestore after each batch of BATCH_SIZE completes (D-14).
+ * Skips destination IDs already present in existingCache.
  * onProgress(done, total) is called after each individual fetch.
  */
 export async function buildDriveCache(
   homeLat: number,
   homeLng: number,
+  uid: string,
+  existingCache?: DriveCache,
   onProgress?: (done: number, total: number) => void
 ): Promise<DriveCache> {
-  const cache: DriveCache = {}
+  const cache: DriveCache = existingCache ? { ...existingCache } : {}
+  const toFetch = destinations.filter((d) => !cache[d.id])
   const total = destinations.length
-  let done = 0
+  let done = destinations.length - toFetch.length // already-cached count
 
-  for (let i = 0; i < destinations.length; i += BATCH_SIZE) {
-    const batch = destinations.slice(i, i + BATCH_SIZE)
+  for (let i = 0; i < toFetch.length; i += BATCH_SIZE) {
+    const batch = toFetch.slice(i, i + BATCH_SIZE)
     await Promise.all(
       batch.map(async (dest) => {
         const result = await fetchOne(homeLat, homeLng, dest.lat, dest.lng)
@@ -89,7 +94,14 @@ export async function buildDriveCache(
         onProgress?.(done, total)
       })
     )
-    if (i + BATCH_SIZE < destinations.length) {
+    // Mid-batch save (D-14): persist after each batch so a resume picks up from here
+    try {
+      await saveDriveCache(uid, cache, homeLat, homeLng)
+    } catch (err) {
+      console.warn('Drive cache mid-batch save failed (build continues):', err)
+    }
+
+    if (i + BATCH_SIZE < toFetch.length) {
       await sleep(BATCH_DELAY_MS)
     }
   }
