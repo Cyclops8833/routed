@@ -123,6 +123,7 @@ function buildPopupHtml(
       ${crewInterestHtml}
       ${notesHtml}
       <button
+        onclick="window.__routedPlanTrip && window.__routedPlanTrip('${destId}')"
         style="margin-top:12px;width:100%;padding:10px;background:#4A6741;color:#FAFAF7;border:none;border-radius:10px;font-family:'DM Sans',system-ui,sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.01em;"
       >Plan a trip here →</button>
     </div>`
@@ -200,6 +201,11 @@ export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Pop
     }
   })
 
+  // Register global plan-trip callback so the popup button can reach React
+  if (options?.onPlanTrip) {
+    ;(window as Window & { __routedPlanTrip?: (id: string) => void }).__routedPlanTrip = options.onPlanTrip
+  }
+
   map.on('click', DOTS_LAYER, (e) => {
     const features = e.features
     if (!features || features.length === 0) return
@@ -220,15 +226,6 @@ export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Pop
       .setLngLat(coords)
       .setHTML(html)
       .addTo(map)
-
-    popup.on('open', () => {
-      const btn = popup?.getElement()?.querySelector('button')
-      if (btn && options?.onPlanTrip) {
-        btn.addEventListener('click', () => {
-          options.onPlanTrip!(String(props.id))
-        })
-      }
-    })
   })
 }
 
