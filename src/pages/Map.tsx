@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
 import { collection, getDocs, getDoc, doc, query, where, onSnapshot } from 'firebase/firestore'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -212,6 +213,7 @@ function SpotlightCard({
 }
 
 export default function MapPage() {
+  const location = useLocation()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const markersRef = useRef<mapboxgl.Marker[]>([])
@@ -526,6 +528,16 @@ export default function MapPage() {
     }
 
     loadCrewMarkers()
+  }, [mapLoaded])
+
+  // Auto-open a destination when navigated from TripDetail with focusDestId
+  useEffect(() => {
+    if (!mapLoaded) return
+    const focusDestId = (location.state as { focusDestId?: string } | null)?.focusDestId
+    if (!focusDestId) return
+    setPreselectDestId(focusDestId)
+    setSheetMode('full')
+    setPlanMode('destination')
   }, [mapLoaded])
 
   // Check for pending trip dates from Trips page

@@ -1291,21 +1291,37 @@ export default function TripDetailPage() {
               </div>
             )}
 
-            {/* Map placeholder */}
-            <div
-              style={{
-                background: 'rgba(74,103,65,0.04)',
-                border: '1px dashed rgba(74,103,65,0.25)',
-                borderRadius: '12px',
-                padding: '24px',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🗺</div>
-              <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', color: 'var(--color-stone)' }}>
-                Routes shown on the main map
-              </div>
-            </div>
+            {/* View routes button */}
+            {confirmedDestination && (
+              <button
+                onClick={() => navigate('/map', { state: { focusDestId: confirmedDestination.id } })}
+                style={{
+                  width: '100%',
+                  background: 'rgba(74,103,65,0.06)',
+                  border: '1px solid rgba(74,103,65,0.25)',
+                  borderRadius: '12px',
+                  padding: '20px 24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{ fontSize: '26px', flexShrink: 0 }}>🗺</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '14px', fontWeight: '600', color: '#4A6741', marginBottom: '2px' }}>
+                    View routes on map
+                  </div>
+                  <div style={{ fontFamily: 'DM Sans, system-ui, sans-serif', fontSize: '12px', color: 'var(--color-stone)' }}>
+                    See everyone's drive to {confirmedDestination.name}
+                  </div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A6741" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.7 }}>
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            )}
 
             {/* Gear & Supplies */}
             <section>
