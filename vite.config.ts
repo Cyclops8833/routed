@@ -1,15 +1,14 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import type { Plugin } from 'vite'
 
 /** Dev-only: proxy /api/fuel-prices to fuelprice.io server-side to avoid CORS */
-function fuelPriceDevProxy(): Plugin {
+function fuelPriceDevProxy(apiKey: string): Plugin {
   return {
     name: 'fuel-price-dev-proxy',
     configureServer(server) {
       server.middlewares.use('/api/fuel-prices', async (req, res) => {
-        const apiKey = process.env.VITE_FUELPRICE_API_KEY
         if (!apiKey) {
           res.writeHead(500, { 'Content-Type': 'application/json' })
           res.end(JSON.stringify({ error: 'VITE_FUELPRICE_API_KEY not set' }))
@@ -38,31 +37,34 @@ function fuelPriceDevProxy(): Plugin {
   }
 }
 
-export default defineConfig({
-  plugins: [
-    react(),
-    fuelPriceDevProxy(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      workbox: {
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB — mapbox-gl is large
-      },
-      manifest: {
-        name: 'Routed',
-        short_name: 'Routed',
-        description: 'Trip planning for the crew',
-        theme_color: '#4A6741',
-        background_color: '#FAFAF7',
-        display: 'standalone',
-        orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
-        icons: [
-          { src: '/routed-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }
-        ]
-      }
-    })
-  ]
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  return {
+    plugins: [
+      react(),
+      fuelPriceDevProxy(env.VITE_FUELPRICE_API_KEY ?? ''),
+      VitePWA({
+        registerType: 'autoUpdate',
+        workbox: {
+          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB — mapbox-gl is large
+        },
+        manifest: {
+          name: 'Routed',
+          short_name: 'Routed',
+          description: 'Trip planning for the crew',
+          theme_color: '#4A6741',
+          background_color: '#FAFAF7',
+          display: 'standalone',
+          orientation: 'portrait',
+          scope: '/',
+          start_url: '/',
+          icons: [
+            { src: '/routed-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+            { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+            { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }
+          ]
+        }
+      })
+    ]
+  }
 })
