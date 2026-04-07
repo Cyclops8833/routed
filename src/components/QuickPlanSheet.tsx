@@ -4,7 +4,8 @@ import { useCrewContext } from '../contexts/CrewContext'
 import { useNavigate } from 'react-router-dom'
 import type { RefObject } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
-import { db } from '../firebase'
+import { db, auth } from '../firebase'
+import { sendNotification } from '../utils/notifications'
 import type { UserProfile } from '../types'
 import { rankDestinations } from '../utils/rankDestinations'
 import type { RankedDestination } from '../utils/rankDestinations'
@@ -161,6 +162,19 @@ export default function QuickPlanSheet({ mapRef, currentUser, onClose, onSwitchT
         status: 'proposed',
         createdAt: Timestamp.now(),
       })
+      // D-06: trip_proposed — notify all crew except creator (fire-and-forget)
+      const creatorName = auth.currentUser?.displayName ?? 'Someone'
+      const firstSelectedId = Array.from(selectedDestIds)[0]
+      const destinationName = ranking.find((r) => r.destination.id === firstSelectedId)?.destination.name ?? 'a new destination'
+      const recipientTokens = allUsers
+        .filter((u) => u.uid !== auth.currentUser?.uid && u.fcmToken)
+        .map((u) => u.fcmToken!)
+      if (recipientTokens.length > 0) {
+        sendNotification(recipientTokens, {
+          title: `${creatorName} proposed a trip to ${destinationName}`,
+          body: 'Open Routed to check it out.',
+        })
+      }
       onClose()
       navigate('/trips')
     } catch (err) {

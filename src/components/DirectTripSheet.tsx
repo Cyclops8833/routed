@@ -7,7 +7,8 @@ import { useState, useEffect } from 'react'
 import { collection, addDoc, Timestamp } from 'firebase/firestore'
 import { useCrewContext } from '../contexts/CrewContext'
 import { useNavigate } from 'react-router-dom'
-import { db } from '../firebase'
+import { db, auth } from '../firebase'
+import { sendNotification } from '../utils/notifications'
 import { destinations } from '../data/destinations'
 import type { UserProfile } from '../types'
 
@@ -92,6 +93,17 @@ export default function DirectTripSheet({
         status: 'proposed',
         createdAt: Timestamp.now(),
       })
+      // D-06: trip_proposed — notify all crew except creator (fire-and-forget)
+      const creatorName = auth.currentUser?.displayName ?? 'Someone'
+      const recipientTokens = allUsers
+        .filter((u) => u.uid !== auth.currentUser?.uid && u.fcmToken)
+        .map((u) => u.fcmToken!)
+      if (recipientTokens.length > 0) {
+        sendNotification(recipientTokens, {
+          title: `${creatorName} proposed a trip to ${dest.name}`,
+          body: 'Open Routed to check it out.',
+        })
+      }
       onClose()
       navigate(`/trips/${ref.id}`)
     } catch {
