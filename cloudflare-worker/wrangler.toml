@@ -1,0 +1,7 @@
+name = "routed-notify"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Secrets (set via `wrangler secret put`):
+# - FIREBASE_SERVICE_ACCOUNT_JSON: Firebase service account key JSON
+# - NOTIFY_SHARED_SECRET: Pre-shared secret for request auth (simpler than Firebase ID token verification for 7-user app)
