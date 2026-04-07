@@ -17,6 +17,8 @@ import { destinations as allDestinations } from '../data/destinations'
 import type { Destination } from '../data/destinations'
 import { calculateCosts } from '../utils/costEngine'
 import type { CostLineItem, FuelPrices, CostBreakdown as CostBreakdownData } from '../utils/costEngine'
+import { loadFuelPriceCache, fetchFuelPrices, saveFuelPriceCache, FALLBACK_PRICES } from '../utils/fuelPrices'
+import type { LiveFuelPrices } from '../utils/fuelPrices'
 import CostBreakdown from '../components/CostBreakdown'
 import VotingPanel from '../components/VotingPanel'
 import { openVoting, startTrip, completeTrip, cancelTrip, reopenVoting } from '../utils/tripActions'
@@ -159,6 +161,8 @@ export default function TripDetailPage() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [reopeningVoting, setReopeningVoting] = useState(false)
+  const [liveFuelPrices, setLiveFuelPrices] = useState<LiveFuelPrices | null>(null)
+  const [fuelPricesLoading, setFuelPricesLoading] = useState(false)
 
   // ── Auth ──
   useEffect(() => {
@@ -213,6 +217,42 @@ export default function TripDetailPage() {
     loadProfiles()
   }, [trip?.attendees.join(',')])
 
+  // ── Fetch live fuel prices — uses creator's cached or fresh price (per D-06) ──
+  useEffect(() => {
+    if (!currentUid || !trip?.creatorUid) return
+    if (attendeeProfiles.length === 0) return  // guard: need creator's profile for suburb (Pitfall 4)
+
+    const creatorUid = trip.creatorUid
+
+    async function loadPrices() {
+      setFuelPricesLoading(true)
+      try {
+        // Try Firestore cache first (per D-13)
+        const cached = await loadFuelPriceCache(creatorUid)
+        if (cached) {
+          setLiveFuelPrices(cached)
+          return
+        }
+        // Cache miss or stale — fetch using creator's homebase suburb (per D-01)
+        const creatorProfile = attendeeProfiles.find(p => p.uid === creatorUid)
+        const suburb = creatorProfile?.homeLocation?.suburb ?? ''
+        const prices = await fetchFuelPrices(suburb)
+        setLiveFuelPrices(prices)
+        // Only cache if we got real data AND current user is the creator (Pitfall 3)
+        if (!prices.isEstimated && currentUid === creatorUid) {
+          await saveFuelPriceCache(creatorUid, prices.petrol, prices.diesel)
+        }
+      } catch {
+        console.error('Failed to load fuel prices, using fallback')
+        setLiveFuelPrices(FALLBACK_PRICES)
+      } finally {
+        setFuelPricesLoading(false)
+      }
+    }
+
+    loadPrices()
+  }, [currentUid, trip?.creatorUid, attendeeProfiles.length])
+
   // ── Checklist real-time ──
   useEffect(() => {
     if (!tripId) return
@@ -247,7 +287,10 @@ export default function TripDetailPage() {
   // Cost config helpers
   // ────────────────────────────────────────────────────────────
 
-  const fuelPrices: FuelPrices = trip?.costConfig?.fuelPrices ?? { petrol: 1.90, diesel: 1.85 }
+  const fuelPrices: FuelPrices = liveFuelPrices
+    ? { petrol: liveFuelPrices.petrol, diesel: liveFuelPrices.diesel }
+    : { petrol: FALLBACK_PRICES.petrol, diesel: FALLBACK_PRICES.diesel }
+  const priceIsEstimated = liveFuelPrices?.isEstimated ?? true
   const dailyFoodRate: number = trip?.costConfig?.dailyFoodRate ?? 30
   const lineItems: CostLineItem[] = (trip?.costConfig?.lineItems ?? []) as CostLineItem[]
 
@@ -310,7 +353,8 @@ export default function TripDetailPage() {
   }
 
   async function handleUpdateFuelPrices(prices: FuelPrices) {
-    await updateCostConfig({ fuelPrices: prices })
+    // Session-only override (per D-04) — update local live state, do NOT persist to Firestore
+    setLiveFuelPrices({ petrol: prices.petrol, diesel: prices.diesel, isEstimated: false })
   }
 
   async function handleUpdateFoodRate(rate: number) {
@@ -1195,6 +1239,9 @@ export default function TripDetailPage() {
             </section>
 
             {/* Cost Breakdown */}
+            {fuelPricesLoading && (
+              <div className="skeleton" style={{ height: '80px', marginBottom: '20px' }} />
+            )}
             {breakdown && confirmedDestination ? (
               <CostBreakdown
                 breakdown={breakdown}
@@ -1204,6 +1251,7 @@ export default function TripDetailPage() {
                 lineItems={lineItems}
                 fuelPrices={fuelPrices}
                 dailyFoodRate={dailyFoodRate}
+                priceIsEstimated={priceIsEstimated}
                 onAddLineItem={isEditable ? handleAddLineItem : undefined}
                 onRemoveLineItem={isEditable ? handleRemoveLineItem : undefined}
                 onUpdateFuelPrices={isEditable ? handleUpdateFuelPrices : undefined}
