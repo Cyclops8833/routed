@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, addDoc, Timestamp } from 'firebase/firestore'
-import { useCrewContext } from '../contexts/CrewContext'
+import { collection, getDocs, addDoc, Timestamp } from 'firebase/firestore'
 import { useNavigate } from 'react-router-dom'
 import type { RefObject } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
@@ -54,7 +53,6 @@ function getAutoTripName(dest: Destination | null): string {
 
 export default function QuickPlanSheet({ mapRef, currentUser, onClose, onSwitchToManual, pendingDestinationId, onPendingDestConsumed }: QuickPlanSheetProps) {
   const navigate = useNavigate()
-  const { allUsers } = useCrewContext()
   const [step, setStep] = useState<QuickStep>(0)
   const [tripLength, setTripLength] = useState<'overnighter' | 'long-weekend' | null>(null)
   const [crewMembers, setCrewMembers] = useState<UserProfile[]>([])
@@ -79,16 +77,27 @@ export default function QuickPlanSheet({ mapRef, currentUser, onClose, onSwitchT
   }, [pendingDestinationId])
 
   useEffect(() => {
-    const profiles = [...allUsers].sort((a, b) => a.uid.localeCompare(b.uid))
-    const colours: Record<string, string> = {}
-    profiles.forEach((p, i) => {
-      colours[p.uid] = CREW_COLOURS[i % CREW_COLOURS.length]
-    })
-    setCrewMembers(profiles)
-    setAttendeeColours(colours)
-    setSelectedAttendees(new Set(profiles.map((p) => p.uid)))
-    setCrewLoading(false)
-  }, [allUsers])
+    async function loadCrew() {
+      try {
+        const snap = await getDocs(collection(db, 'users'))
+        const profiles = snap.docs
+          .map((d) => d.data() as UserProfile)
+          .sort((a, b) => a.uid.localeCompare(b.uid))
+        const colours: Record<string, string> = {}
+        profiles.forEach((p, i) => {
+          colours[p.uid] = CREW_COLOURS[i % CREW_COLOURS.length]
+        })
+        setCrewMembers(profiles)
+        setAttendeeColours(colours)
+        setSelectedAttendees(new Set(profiles.map((p) => p.uid)))
+      } catch (err) {
+        console.error('Failed to load crew:', err)
+      } finally {
+        setCrewLoading(false)
+      }
+    }
+    loadCrew()
+  }, [])
 
   async function runRanking(selectedVibe: Vibe) {
     setIsRanking(true)

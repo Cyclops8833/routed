@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
+import { collection, getDocs } from 'firebase/firestore'
+import { db } from '../firebase'
 import { UserProfile, Vehicle } from '../types'
 import { getUserPhoto } from '../utils/userPhoto'
-import { useCrewContext } from '../contexts/CrewContext'
 
 type VehicleType = Vehicle['type']
 
@@ -214,15 +215,25 @@ function CrewCard({ member }: { member: UserProfile }) {
 }
 
 export default function CrewPage() {
-  const { allUsers } = useCrewContext()
   const [members, setMembers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
-  const [error] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setMembers(allUsers)
-    setLoading(false)
-  }, [allUsers])
+    async function loadCrew() {
+      try {
+        const snap = await getDocs(collection(db, 'users'))
+        const profiles = snap.docs.map((d) => d.data() as UserProfile)
+        setMembers(profiles)
+      } catch (err) {
+        console.error('Failed to load crew:', err)
+        setError('Could not load crew. Check your connection.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadCrew()
+  }, [])
 
   return (
     <div

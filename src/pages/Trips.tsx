@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore'
-import { useCrewContext } from '../contexts/CrewContext'
+import { collection, query, where, onSnapshot, orderBy, getDocs } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
 import { db, auth } from '../firebase'
-import type { Trip, Shortlist } from '../types'
+import type { Trip, UserProfile, Shortlist } from '../types'
 import { getUpcomingLongWeekends } from '../data/publicHolidays'
 import { subscribeToAllShortlists } from '../utils/shortlistUtils'
 import { destinations } from '../data/destinations'
@@ -42,7 +41,7 @@ export default function TripsPage() {
   const [uid, setUid] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming')
   const [shortlists, setShortlists] = useState<Shortlist[]>([])
-  const { allUsers: allMembers } = useCrewContext()
+  const [allMembers, setAllMembers] = useState<UserProfile[]>([])
   const navigate = useNavigate()
 
   // Listen for auth state
@@ -51,6 +50,13 @@ export default function TripsPage() {
       setUid(user?.uid ?? null)
     })
     return unsub
+  }, [])
+
+  // Load all crew members
+  useEffect(() => {
+    getDocs(collection(db, 'users')).then((snap) => {
+      setAllMembers(snap.docs.map((d) => d.data() as UserProfile))
+    }).catch(() => {})
   }, [])
 
   // Subscribe to all shortlists

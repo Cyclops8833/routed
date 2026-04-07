@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, addDoc, Timestamp } from 'firebase/firestore'
-import { useCrewContext } from '../contexts/CrewContext'
+import { collection, getDocs, addDoc, Timestamp } from 'firebase/firestore'
 import { useNavigate } from 'react-router-dom'
 import type { RefObject } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
@@ -45,7 +44,6 @@ function calcNights(start: string, end: string): number {
 export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDragHandlePointerDown, onDragHandlePointerMove, onDragHandlePointerUp, pendingDestinationId, onPendingDestConsumed }: TripSheetProps) {
   const today = new Date().toISOString().split('T')[0]
   const navigate = useNavigate()
-  const { allUsers } = useCrewContext()
 
   // Form state
   const [tripName, setTripName] = useState('')
@@ -77,17 +75,31 @@ export default function TripSheet({ mapRef, currentUser, onClose, onPeek, onDrag
     onPendingDestConsumed?.()
   }, [pendingDestinationId])
 
-  // Derive crew members from context
+  // Load crew members from Firestore
   useEffect(() => {
-    const profiles = [...allUsers].sort((a, b) => a.uid.localeCompare(b.uid))
-    const colours: Record<string, string> = {}
-    profiles.forEach((p, i) => {
-      colours[p.uid] = CREW_COLOURS[i % CREW_COLOURS.length]
-    })
-    setCrewMembers(profiles)
-    setAttendeeColours(colours)
-    setCrewLoading(false)
-  }, [allUsers])
+    async function loadCrew() {
+      try {
+        const snap = await getDocs(collection(db, 'users'))
+        const profiles = snap.docs
+          .map((d) => d.data() as UserProfile)
+          .sort((a, b) => a.uid.localeCompare(b.uid))
+
+        const colours: Record<string, string> = {}
+        profiles.forEach((p, i) => {
+          colours[p.uid] = CREW_COLOURS[i % CREW_COLOURS.length]
+        })
+
+        setCrewMembers(profiles)
+        setAttendeeColours(colours)
+        // Default: nobody selected — user opts in who's coming
+      } catch (err) {
+        console.error('Failed to load crew:', err)
+      } finally {
+        setCrewLoading(false)
+      }
+    }
+    loadCrew()
+  }, [])
 
   const toggleAttendee = (uid: string) => {
     setSelectedAttendees((prev) => {

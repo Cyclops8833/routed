@@ -12,7 +12,7 @@ import QuickPlanSheet from '../components/QuickPlanSheet'
 import DirectTripSheet from '../components/DirectTripSheet'
 import { addDestinationDots } from '../utils/mapDestinations'
 import { getSpotlightDestinations } from '../utils/spotlight'
-import { isCacheValid, buildDriveCache, saveDriveCache } from '../utils/driveCache'
+import { isCacheValid, buildDriveCache } from '../utils/driveCache'
 import { fetchRoutes, drawRoutes } from '../utils/mapRoutes'
 import type { DriveCache } from '../types'
 import { destinations } from '../data/destinations'
@@ -352,13 +352,26 @@ export default function MapPage() {
         return
       }
 
-      // Cache missing/stale — build it
+      // Cache missing, stale, or partial — build/resume it
+      // Only reuse existing cache entries if the home location hasn't changed (D-15 threat guard)
+      const locationMatch =
+        profile.driveCacheLocation &&
+        Math.abs(profile.driveCacheLocation.lat - loc.lat) < 0.001 &&
+        Math.abs(profile.driveCacheLocation.lng - loc.lng) < 0.001
+      const existingCache = locationMatch ? profile.driveCache : undefined
+
       setCacheProgress({ done: 0, total: destinations.length })
       try {
-        const cache = await buildDriveCache(loc.lat, loc.lng, (done, total) => {
-          setCacheProgress({ done, total })
-        })
-        await saveDriveCache(currentUid!, cache, loc.lat, loc.lng)
+        const cache = await buildDriveCache(
+          loc.lat,
+          loc.lng,
+          currentUid!,
+          existingCache,
+          (done, total) => {
+            setCacheProgress({ done, total })
+          }
+        )
+        // No separate saveDriveCache call needed — buildDriveCache saves incrementally.
         setDriveCache(cache)
       } catch (err) {
         console.error('Drive cache build failed:', err)
