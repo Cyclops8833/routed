@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import type { RefObject } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
 import type { RankedDestination } from '../utils/rankDestinations'
@@ -59,7 +59,7 @@ function abbreviateSeason(s: string): string {
   return map[s] ?? s
 }
 
-export default function DestinationCard({
+function DestinationCard({
   ranked,
   index,
   isSelected,
@@ -627,3 +627,5 @@ export default function DestinationCard({
     </div>
   )
 }
+
+export default memo(DestinationCard)
