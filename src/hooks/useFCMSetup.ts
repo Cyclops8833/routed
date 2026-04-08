@@ -24,6 +24,7 @@ export function useFCMSetup() {
 
   // Register/refresh FCM token for the given uid
   const registerToken = useCallback(async (uid: string): Promise<string | null> => {
+    console.log('[fcm] registerToken called — messaging:', !!messaging, 'permission:', Notification.permission, 'vapid:', !!VAPID_KEY)
     if (!messaging || !('Notification' in window)) return null
     if (Notification.permission !== 'granted') return null
     if (!VAPID_KEY) {
