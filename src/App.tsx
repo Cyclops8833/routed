@@ -53,7 +53,7 @@ function LoadingScreen() {
 function AppContent() {
   const { user, profile, loading, authError } = useAuth()
   // FCM token registration — runs on auth state change (D-02); safe to call unconditionally
-  useFCMSetup()
+  const { requestPermission, isSupported, permission } = useFCMSetup()
   // Trip notification triggers — D-04 (vote_requested), D-05 (trip_confirmed), D-07 (trip_approaching)
   useTripNotifications()
   // Shame notifications — D-08 (72hr shame) + D-09 (daily follow-up)
@@ -69,7 +69,7 @@ function AppContent() {
 
   return (
     <Layout>
-      <NotificationPrompt />
+      <NotificationPrompt requestPermission={requestPermission} isSupported={isSupported} permission={permission} />
       <Suspense fallback={<div className="topo-bg" style={{ height: '100vh' }} />}>
         <Routes>
           <Route path="/map" element={<MapPage />} />

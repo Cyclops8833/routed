@@ -1,6 +1,11 @@
 import { useState } from 'react'
-import { useFCMSetup } from '../hooks/useFCMSetup'
 import { useNotifications } from '../contexts/NotificationContext'
+
+interface Props {
+  requestPermission: () => Promise<boolean>
+  isSupported: boolean
+  permission: NotificationPermission
+}
 
 /**
  * Contextual notification permission prompt (D-03).
@@ -10,8 +15,7 @@ import { useNotifications } from '../contexts/NotificationContext'
  * - Push is supported in this browser
  * - User hasn't dismissed the prompt this session
  */
-export function NotificationPrompt() {
-  const { requestPermission, isSupported, permission } = useFCMSetup()
+export function NotificationPrompt({ requestPermission, isSupported, permission }: Props) {
   const { unvotedTrips } = useNotifications()
   const [dismissed, setDismissed] = useState(false)
   const [requesting, setRequesting] = useState(false)
