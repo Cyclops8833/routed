@@ -86,7 +86,8 @@ export default defineConfig(({ mode }) => {
             { src: '/routed-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
             { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
             { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }
-          ]
+          ],
+          gcm_sender_id: env.VITE_FIREBASE_MESSAGING_SENDER_ID
         }
       })
     ]
