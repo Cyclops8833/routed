@@ -24,7 +24,6 @@ export function useFCMSetup() {
 
   // Register/refresh FCM token for the given uid
   const registerToken = useCallback(async (uid: string): Promise<string | null> => {
-    console.log('[fcm] registerToken called — messaging:', !!messaging, 'permission:', Notification.permission, 'vapid len:', VAPID_KEY?.length)
     if (!messaging || !('Notification' in window)) return null
     if (Notification.permission !== 'granted') return null
     if (!VAPID_KEY) {
@@ -34,12 +33,10 @@ export function useFCMSetup() {
 
     try {
       const swReg = await navigator.serviceWorker.getRegistration()
-      console.log('[fcm] swReg:', swReg?.active?.scriptURL)
       const token = await getToken(messaging, {
         vapidKey: VAPID_KEY,
         serviceWorkerRegistration: swReg || undefined,
       })
-      console.log('[fcm] token:', token ? token.slice(0, 20) + '…' : token)
 
       if (!token) return null
 
