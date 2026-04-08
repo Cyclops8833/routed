@@ -34,10 +34,12 @@ export function useFCMSetup() {
 
     try {
       const swReg = await navigator.serviceWorker.getRegistration()
+      console.log('[fcm] swReg:', swReg?.active?.scriptURL)
       const token = await getToken(messaging, {
         vapidKey: VAPID_KEY,
         serviceWorkerRegistration: swReg || undefined,
       })
+      console.log('[fcm] token:', token ? token.slice(0, 20) + '…' : token)
 
       if (!token) return null
 
