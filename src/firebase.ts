@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider } from 'firebase/auth'
+import { getAuth, GoogleAuthProvider, indexedDBLocalPersistence, setPersistence } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { getMessaging, type Messaging } from 'firebase/messaging'
@@ -15,6 +15,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
+// Use IndexedDB for auth persistence — shared between PWA WebView and Chrome Custom Tabs on Android,
+// preventing "missing initial state" errors during Google OAuth in standalone PWA mode
+setPersistence(auth, indexedDBLocalPersistence).catch(() => {})
 export const db = getFirestore(app)
 export const googleProvider = new GoogleAuthProvider()
 export const storage = getStorage(app)
