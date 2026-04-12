@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
-import { collection, getDocs, getDoc, doc, query, where, onSnapshot } from 'firebase/firestore'
+import { collection, getDocs, getDoc, doc, query, where, onSnapshot, setDoc } from 'firebase/firestore'
 import { useCrewContext } from '../contexts/CrewContext'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -151,6 +151,13 @@ export default function MapPage() {
   const [welcomeVisible, setWelcomeVisible] = useState(!localStorage.getItem(WELCOME_SEEN_KEY))
   const [welcomeFading, setWelcomeFading] = useState(false)
 
+  // Admin banner
+  const [banner, setBanner] = useState<{ text: string; active: boolean } | null>(null)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
+  const [bannerAdminOpen, setBannerAdminOpen] = useState(false)
+  const [bannerDraft, setBannerDraft] = useState('')
+  const isAdmin = currentUser?.email === 'i.zbiegniewski@gmail.com'
+
   // Keep planModeRef in sync so Mapbox popup closures always read latest value
   useEffect(() => { planModeRef.current = planMode }, [planMode])
 
@@ -172,6 +179,18 @@ export default function MapPage() {
       if (snap.exists()) setCurrentUser(snap.data() as UserProfile)
     })
   }, [currentUid])
+
+  // Subscribe to admin banner
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'meta', 'banner'), (snap) => {
+      if (snap.exists()) {
+        setBanner(snap.data() as { text: string; active: boolean })
+      } else {
+        setBanner(null)
+      }
+    })
+    return unsub
+  }, [])
 
   // Check if user has any trips
   useEffect(() => {
@@ -807,6 +826,218 @@ export default function MapPage() {
       >
         Tilt
       </button>
+
+      {/* Admin banner */}
+      {!isLoading && banner?.active && !bannerDismissed && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '16px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 20,
+            maxWidth: 'min(360px, calc(100vw - 100px))',
+            width: 'max-content',
+            background: 'rgba(30,30,28,0.88)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            borderRadius: '10px',
+            padding: '9px 36px 9px 14px',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <span style={{
+            fontFamily: 'DM Sans, system-ui, sans-serif',
+            fontSize: '13px',
+            fontWeight: '500',
+            color: '#FAFAF7',
+            lineHeight: 1.4,
+          }}>
+            {banner.text}
+          </span>
+          {isAdmin && (
+            <button
+              onClick={() => { setBannerDraft(banner.text); setBannerAdminOpen(true) }}
+              aria-label="Edit banner"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'rgba(250,250,247,0.5)',
+                fontSize: '13px',
+                padding: '0 2px',
+                lineHeight: 1,
+                flexShrink: 0,
+              }}
+            >
+              ✎
+            </button>
+          )}
+          <button
+            onClick={() => setBannerDismissed(true)}
+            aria-label="Dismiss banner"
+            style={{
+              position: 'absolute',
+              top: '6px',
+              right: '8px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'rgba(250,250,247,0.5)',
+              fontSize: '14px',
+              lineHeight: 1,
+              padding: '2px',
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* Admin banner trigger — only visible to Ian when no banner is active */}
+      {!isLoading && isAdmin && (!banner?.active || bannerDismissed) && (
+        <button
+          onClick={() => { setBannerDraft(banner?.text ?? ''); setBannerAdminOpen(true) }}
+          aria-label="Post banner"
+          style={{
+            position: 'absolute',
+            top: '16px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 20,
+            background: 'rgba(30,30,28,0.6)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            border: '1px dashed rgba(250,250,247,0.25)',
+            borderRadius: '8px',
+            padding: '5px 12px',
+            cursor: 'pointer',
+            color: 'rgba(250,250,247,0.4)',
+            fontFamily: 'DM Sans, system-ui, sans-serif',
+            fontSize: '11px',
+            fontWeight: '500',
+          }}
+        >
+          + post banner
+        </button>
+      )}
+
+      {/* Admin banner editor modal */}
+      {isAdmin && bannerAdminOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+          }}
+          onClick={() => setBannerAdminOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--color-surface)',
+              borderRadius: '16px',
+              padding: '20px',
+              width: '100%',
+              maxWidth: '340px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+            }}
+          >
+            <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '17px', fontWeight: '700', color: 'var(--color-charcoal)', marginBottom: '12px' }}>
+              Crew Banner
+            </div>
+            <textarea
+              value={bannerDraft}
+              onChange={(e) => setBannerDraft(e.target.value)}
+              placeholder="Type a message for the crew…"
+              rows={3}
+              autoFocus
+              style={{
+                width: '100%',
+                borderRadius: '8px',
+                border: '1px solid rgba(0,0,0,0.12)',
+                padding: '10px 12px',
+                fontFamily: 'DM Sans, system-ui, sans-serif',
+                fontSize: '14px',
+                color: 'var(--color-charcoal)',
+                background: 'var(--color-base)',
+                resize: 'none',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              <button
+                onClick={async () => {
+                  await setDoc(doc(db, 'meta', 'banner'), { text: bannerDraft.trim(), active: true })
+                  setBannerDismissed(false)
+                  setBannerAdminOpen(false)
+                }}
+                disabled={!bannerDraft.trim()}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '8px',
+                  background: bannerDraft.trim() ? '#4A6741' : 'rgba(74,103,65,0.4)',
+                  color: 'white',
+                  border: 'none',
+                  cursor: bannerDraft.trim() ? 'pointer' : 'default',
+                  fontFamily: 'DM Sans, system-ui, sans-serif',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                }}
+              >
+                Post
+              </button>
+              {banner?.active && (
+                <button
+                  onClick={async () => {
+                    await setDoc(doc(db, 'meta', 'banner'), { text: banner.text, active: false })
+                    setBannerAdminOpen(false)
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '8px',
+                    background: 'rgba(184,92,56,0.12)',
+                    color: '#B85C38',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'DM Sans, system-ui, sans-serif',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={() => setBannerAdminOpen(false)}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  background: 'var(--color-base)',
+                  color: 'var(--color-stone)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'DM Sans, system-ui, sans-serif',
+                  fontSize: '14px',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Welcome card — shown on first visit, dismissable */}
       {!isLoading && welcomeVisible && !sheetVisible && (
