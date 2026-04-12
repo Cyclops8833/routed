@@ -102,19 +102,19 @@ function buildPopupHtml(
     : ''
 
   const photoHtml = dest.photos && dest.photos[0]
-    ? `<img src="${dest.photos[0]}" alt="${dest.name}" onerror="this.style.display='none'" style="width:100%;height:150px;object-fit:cover;display:block;border-radius:4px 4px 0 0;margin-bottom:10px;" />`
+    ? `<img src="${dest.photos[0]}" alt="${dest.name}" onerror="this.style.display='none'" style="width:100%;height:110px;object-fit:cover;display:block;border-radius:4px 4px 0 0;margin-bottom:8px;" />`
     : ''
 
   return `
     <div style="font-family:'DM Sans',system-ui,sans-serif;width:100%;box-sizing:border-box;">
       ${photoHtml}
-      <div style="font-family:'Fraunces',Georgia,serif;font-size:17px;font-weight:700;color:#2D2D2D;margin-bottom:6px;line-height:1.2;">${dest.name}</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
-        <span style="font-size:11px;font-weight:600;background:rgba(74,103,65,0.1);color:#4A6741;border-radius:100px;padding:2px 8px;">${dest.region}</span>
+      <div style="font-family:'Fraunces',Georgia,serif;font-size:15px;font-weight:700;color:#2D2D2D;margin-bottom:4px;line-height:1.2;">${dest.name}</div>
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;flex-wrap:wrap;">
+        <span style="font-size:10px;font-weight:600;background:rgba(74,103,65,0.1);color:#4A6741;border-radius:100px;padding:2px 7px;">${dest.region}</span>
         ${bookingBadge}
       </div>
-      <div style="font-size:12px;color:#4A4A44;line-height:1.5;margin-bottom:8px;">${firstSentence(dest.description)}</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8C8578;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+      <div style="font-size:11px;color:#4A4A44;line-height:1.4;margin-bottom:6px;">${firstSentence(dest.description)}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#8C8578;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:2px;">
         <span>⛺ ${cost}</span>
         <span>${roadLabel}</span>
         ${activityIcons ? `<span>${activityIcons}</span>` : ''}
@@ -124,7 +124,7 @@ function buildPopupHtml(
       ${notesHtml}
       <button
         onclick="window.__routedPlanTrip && window.__routedPlanTrip('${destId}')"
-        style="margin-top:12px;width:100%;padding:10px;background:#4A6741;color:#FAFAF7;border:none;border-radius:10px;font-family:'DM Sans',system-ui,sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.01em;"
+        style="margin-top:10px;width:100%;padding:8px;background:#4A6741;color:#FAFAF7;border:none;border-radius:8px;font-family:'DM Sans',system-ui,sans-serif;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:0.01em;"
       >Plan a trip here →</button>
     </div>`
 }
@@ -222,7 +222,7 @@ export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Pop
     if (geometry.type !== 'Point') return
     const coords = geometry.coordinates as [number, number]
 
-    popup = new Popup({ offset: 14, maxWidth: 'min(300px, 82vw)' })
+    popup = new Popup({ offset: 14, maxWidth: 'min(260px, 78vw)' })
       .setLngLat(coords)
       .setHTML(html)
       .addTo(map)
