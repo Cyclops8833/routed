@@ -106,7 +106,7 @@ function buildPopupHtml(
     : ''
 
   return `
-    <div style="font-family:'DM Sans',system-ui,sans-serif;width:300px;max-width:90vw;">
+    <div style="font-family:'DM Sans',system-ui,sans-serif;width:100%;box-sizing:border-box;">
       ${photoHtml}
       <div style="font-family:'Fraunces',Georgia,serif;font-size:17px;font-weight:700;color:#2D2D2D;margin-bottom:6px;line-height:1.2;">${dest.name}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
@@ -222,7 +222,7 @@ export function addDestinationDots(map: mapboxgl.Map, Popup: typeof mapboxgl.Pop
     if (geometry.type !== 'Point') return
     const coords = geometry.coordinates as [number, number]
 
-    popup = new Popup({ offset: 14, maxWidth: '360px' })
+    popup = new Popup({ offset: 14, maxWidth: 'min(300px, 82vw)' })
       .setLngLat(coords)
       .setHTML(html)
       .addTo(map)
