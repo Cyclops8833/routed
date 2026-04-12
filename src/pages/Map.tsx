@@ -415,14 +415,36 @@ export default function MapPage() {
 
     const bounds = new mapboxgl.LngLatBounds()
 
+    // Count how many members share each suburb centroid so we can spread them out
+    const coordKey = (m: typeof membersWithLocation[0]) =>
+      `${m.homeLocation!.lat.toFixed(5)},${m.homeLocation!.lng.toFixed(5)}`
+    const suburbGroups: Record<string, typeof membersWithLocation> = {}
+    for (const m of membersWithLocation) {
+      const key = coordKey(m)
+      suburbGroups[key] = suburbGroups[key] ? [...suburbGroups[key], m] : [m]
+    }
+    const suburbIndex: Record<string, number> = {}
+
     membersWithLocation.forEach((member, index) => {
       const colour = CREW_COLOURS[index % CREW_COLOURS.length]
       const el = createMarkerElement(member, colour)
+
+      const key = coordKey(member)
+      const group = suburbGroups[key]
+      const posInGroup = suburbIndex[key] ?? 0
+      suburbIndex[key] = posInGroup + 1
+
+      // Spread members in the same suburb in a circle (~300m radius)
+      const spreadRadius = 0.003 // degrees (~300m)
+      const angle = (2 * Math.PI * posInGroup) / group.length
+      const lat = member.homeLocation!.lat + (group.length > 1 ? spreadRadius * Math.sin(angle) : 0)
+      const lng = member.homeLocation!.lng + (group.length > 1 ? spreadRadius * Math.cos(angle) : 0)
+
       const popup = new mapboxgl.Popup({ offset: 20, maxWidth: '220px' }).setHTML(
         buildPopupHTML(member)
       )
       const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([member.homeLocation!.lng, member.homeLocation!.lat])
+        .setLngLat([lng, lat])
         .setPopup(popup)
         .addTo(map)
 
