@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { signInWithPopup } from 'firebase/auth'
+import { signInWithPopup, signInWithRedirect } from 'firebase/auth'
 import { auth, googleProvider } from '../firebase'
+
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches
 import TopoPattern from '../components/TopoPattern'
 
 function GoogleIcon() {
@@ -34,7 +36,11 @@ export default function Landing({ authError }: { authError?: string | null }) {
     setError(null)
     setLoading(true)
     try {
-      await signInWithPopup(auth, googleProvider)
+      if (isStandalone) {
+        await signInWithRedirect(auth, googleProvider)
+      } else {
+        await signInWithPopup(auth, googleProvider)
+      }
     } catch (err) {
       const e = err as { code?: string; message?: string }
       if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
