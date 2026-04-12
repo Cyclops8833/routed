@@ -134,6 +134,7 @@ export default function MapPage() {
   const [pendingDestForPlanning, setPendingDestForPlanning] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [currentUid, setCurrentUid] = useState<string | null>(null)
+  const [currentAuthEmail, setCurrentAuthEmail] = useState<string | null>(null)
   const [driveCache, setDriveCache] = useState<DriveCache | null>(null)
   const [cacheProgress, setCacheProgress] = useState<{ done: number; total: number } | null>(null)
   const [hasTrips, setHasTrips] = useState<boolean | null>(null)
@@ -156,7 +157,7 @@ export default function MapPage() {
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [bannerAdminOpen, setBannerAdminOpen] = useState(false)
   const [bannerDraft, setBannerDraft] = useState('')
-  const isAdmin = currentUser?.email === 'i.zbiegniewski@gmail.com'
+  const isAdmin = currentAuthEmail === 'i.zbiegniewski@gmail.com'
 
   // Keep planModeRef in sync so Mapbox popup closures always read latest value
   useEffect(() => { planModeRef.current = planMode }, [planMode])
@@ -164,10 +165,11 @@ export default function MapPage() {
   // Keep isTerrainRef in sync so style.load closure reads latest value
   useEffect(() => { isTerrainRef.current = isTerrain }, [isTerrain])
 
-  // Listen for auth to get current uid
+  // Listen for auth to get current uid + email
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       setCurrentUid(user?.uid ?? null)
+      setCurrentAuthEmail(user?.email ?? null)
     })
     return unsub
   }, [])
