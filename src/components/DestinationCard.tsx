@@ -181,7 +181,7 @@ function DestinationCard({
           onError={() => setImgError(true)}
           style={{
             width: '100%',
-            aspectRatio: '3 / 2',
+            aspectRatio: '16 / 9',
             objectFit: 'cover',
             display: 'block',
           }}
@@ -191,7 +191,7 @@ function DestinationCard({
           className="topo-bg"
           style={{
             width: '100%',
-            aspectRatio: '3 / 2',
+            aspectRatio: '16 / 9',
           }}
         />
       )}

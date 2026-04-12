@@ -70,7 +70,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Rainbow trout", "Brown trout"],
     tags: ["free camping", "hike-in", "trout", "river", "alpine"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&auto=format"],
+    photos: ["https://trailnavigator.s3.ap-southeast-2.amazonaws.com/walks/423/2179.jpg"],
   },
   {
     id: "lake-eildon-fraser",
@@ -97,7 +97,7 @@ export const destinations: Destination[] = [
       peakWarning: null,
       costNote: 'Half-price camping until 30 June 2027.',
     },
-    photos: ["https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&auto=format"],
+    photos: ["https://images.toopa.com/479665_lake-eildon-camping.jpg"],
   },
   {
     id: "jamieson-river-kevington",
@@ -118,7 +118,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "river", "gold history", "trout"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format"],
+    photos: ["https://www.mansfieldmtbuller.com.au/wp-content/uploads/sites/46/atdw-AU1142871-64378577cee86e870536ade8.jpg"],
   },
   {
     id: "howqua-river",
@@ -139,7 +139,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout", "Rainbow trout"],
     tags: ["free camping", "river", "trout", "popular", "family friendly"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=800&auto=format"],
+    photos: ["https://scontent.fsyd3-1.fna.fbcdn.net/v/t39.30808-6/599653311_1181242754186383_8813946290507151387_n.jpg?stp=dst-jpg_p180x540_tt6&_nc_cat=103&ccb=1-7&_nc_sid=7b2446&_nc_ohc=kTm_x-USnEgQ7kNvwEL605O&_nc_oc=Adq41y-003MXMKwhGG0JFsp1OarkMLq3KvtG6z8BY5eRcjBdWVFys6DUZ3lWRLVeFzY&_nc_zt=23&_nc_ht=scontent.fsyd3-1.fna&_nc_gid=5406kmJldGvsHuCzQIIC9A&_nc_ss=7a389&oh=00_Af0jhhOu4YkLymdPkr0KnIw7bNPzefU3waDzKePXH0Ffmw&oe=69DCD3C1"],
   },
   {
     id: "buckland-valley",
@@ -160,7 +160,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "river", "trout", "stocked", "near Bright"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1542224566-6e85f2e6772f?w=800&auto=format"],
+    photos: ["https://scontent.fsyd3-1.fna.fbcdn.net/v/t39.30808-6/610662905_1191625313148127_5811488718722231775_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=7b2446&_nc_ohc=SfgsDt3YUksQ7kNvwFROMDR&_nc_oc=Adq9WaPjBDh24Jqo_nqImBXJ0Nf-1M2zkc6WBPsmvTielLIP-Jaw-sb_rrpbis5JbFs&_nc_zt=23&_nc_ht=scontent.fsyd3-1.fna&_nc_gid=b5Fv1d998bj8OE2v9_XYxA&_nc_ss=7a389&oh=00_Af3VoeODYnRvlZccLgW2YN241xw9PwN5T4yk1j2GOylxFg&oe=69DCE5E8"],
   },
   {
     id: "lake-catani-buffalo",
@@ -187,7 +187,7 @@ export const destinations: Destination[] = [
       peakWarning: null,
       costNote: 'Half-price camping until 30 June 2027 (Victorian Government initiative).',
     },
-    photos: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format"],
+    photos: ["https://trailnavigator.s3.ap-southeast-2.amazonaws.com/walks/340/1793-l15.jpg"],
   },
   {
     id: "lake-william-hovell",
@@ -208,7 +208,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "lake", "trout", "stocked", "quiet"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&auto=format"],
+    photos: ["https://www.visitvictoria.com/-/media/atdw/high-country/see-and-do/nature-and-wildlife/national-parks-and-reserves/fd487f6c29261e25b16b6ddc94139d23_1600x1200.jpeg?ts=20250624300739"],
   },
   {
     id: "wonnangatta-valley",
@@ -242,7 +242,7 @@ export const destinations: Destination[] = [
       "unsolved murder",
     ],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1501621667575-af81f1f0badd?w=800&auto=format"],
+    photos: ["https://assets.visitgippsland.com.au/images/_1200x630_crop_center-center_82_none/Wonnagatta-Station-4WD.jpg?mtime=1607548227"],
   },
   {
     id: "king-river-valley",
@@ -263,7 +263,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["river", "trout", "wine region", "accessible"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format"],
+    photos: ["https://hipcamp-res.cloudinary.com/images/c_limit,f_auto,h_1200,q_60,w_1920/v1643443054/campground-photos/ixbemfd8eyg3mmqwyyyx/riverside-king-valley-roadside-camp-powered.jpg"],
   },
   {
     id: "delatite-river-mansfield",
@@ -284,7 +284,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Rainbow trout", "Brown trout"],
     tags: ["free camping", "river", "trout", "fly fishing"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=800&auto=format"],
+    photos: ["https://assets.riparide.com/photo/58770/image/hero-adcb47c0ad2f99661457a85363df2409.jpg"],
   },
   {
     id: "lake-nillahcootie",
@@ -305,7 +305,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Murray cod", "Golden perch", "Brown trout", "Redfin"],
     tags: ["lake", "stocked", "Murray cod", "accessible"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1559827291-72ebf90049e4?w=800&auto=format"],
+    photos: ["https://www.visitvictoria.com/-/media/atdw/high-country/see-and-do/nature-and-wildlife/lakes-and-waterways/4fc3b78833e1d1709048e4b8c428f33d_1600x1200.jpeg?ts=20250624320100"],
   },
 
   // ============================================================
@@ -336,7 +336,7 @@ export const destinations: Destination[] = [
       peakWarning: 'Minimum 2-night stay at peak periods (Christmas, Easter, long weekends).',
       costNote: 'Half-price camping until 30 June 2027.',
     },
-    photos: ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format"],
+    photos: ["https://assets.visitgippsland.com.au/images/_1200x630_crop_center-center_82_none/Wilsons-Promontory-footbridge-crossing-over-Tidal-River-Loo-Errn-Walk.jpeg?mtime=1665789069"],
   },
   {
     id: "thompson-river-walhalla",
@@ -357,7 +357,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout", "Australian bass"],
     tags: ["free camping", "river", "gold history", "trout", "bass", "hidden gem"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1518173946687-a71af578a760?w=800&auto=format"],
+    photos: ["https://images.toopa.com/265283_walhalla-walking-history-poverty-point-bridge-thom.jpg"],
   },
   {
     id: "aberfeldy-river",
@@ -378,7 +378,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "remote", "4wd", "waterfall", "river", "limited sites"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format"],
+    photos: ["https://upload.wikimedia.org/wikipedia/commons/0/0b/Aberfeldy_River%2C_Baw_Baw_National_Park.jpg"],
   },
   {
     id: "blue-rock-lake",
@@ -399,7 +399,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "lake", "trout", "stocked", "quiet"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1500534314209-a157d0e0dff8?w=800&auto=format"],
+    photos: ["https://assets.visitgippsland.com.au/images/_1200x630_crop_center-center_82_none/Blue-Rock-Lake-Willow-Grove-panoramic-view-of-people-sitting-at-lakes-edge-hero.jpg?mtime=1763163179"],
   },
   {
     id: "mitchellriver-den-of-nargun",
@@ -420,7 +420,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Australian bass"],
     tags: ["4wd", "free camping", "river", "indigenous heritage", "national park"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1547592180-85f173990554?w=800&auto=format"],
+    photos: ["https://www.trailnavigator.com.au/blog/wp-content/uploads/2023/09/cave-2-1-scaled.jpg"],
   },
   {
     id: "glenmaggie-lake",
@@ -441,7 +441,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Australian bass"],
     tags: ["lake", "stocked", "bass", "boat ramp"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&auto=format"],
+    photos: ["https://www.parks.vic.gov.au/-/media/project/pv/main/parks/images/places-to-see/glenmaggie-regional-park/glenmaggie-regional-park_1920x800.jpg?rev=c8727f087fa14c5a805f43cd083dc81f&la=en&h=800&w=1920&hash=8DF2DE445BB2375572B3AB664B5CD952"],
   },
   {
     id: "ninety-mile-beach-seaspray",
@@ -462,7 +462,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Gummy shark", "Flathead", "Australian salmon", "Whiting"],
     tags: ["free camping", "coastal", "beach", "surf fishing"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1507041957456-9c397ce39c97?w=800&auto=format"],
+    photos: ["https://www.visitmelbourne.com/-/media/atdw/gippsland/see-and-do/nature-and-wildlife/national-parks-and-reserves/original__9050704_tvic_visionsofvictoria920310305_y97j0hp_1600x1200.jpg?ts=20251102371030"],
   },
 
   // ============================================================
@@ -493,7 +493,7 @@ export const destinations: Destination[] = [
       peakWarning: null,
       costNote: 'Half-price camping until 30 June 2027.',
     },
-    photos: ["https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=800&auto=format"],
+    photos: ["https://www.parks.vic.gov.au/-/media/project/pv/main/parks/images/places-to-see/grampians-national-park/1-waterfalls-grampians-national-park-1920x1124.jpg?rev=2a772db544ca480baffa85fbe46aeaa3&la=en&h=450&w=768&hash=CEA045E777548BBFFFA39C96D8F5F5A0"],
   },
   {
     id: "lake-wartook-grampians",
@@ -514,7 +514,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Rainbow trout", "Brown trout", "Redfin"],
     tags: ["free camping", "lake", "trout", "fly fishing", "quiet"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&auto=format"],
+    photos: ["https://www.visitvictoria.com/-/media/atdw/grampians/things-to-do/nature-and-wildlife/lakes-and-waterways/3b805fce771e89ef8041474d9174a492_1600x1200.jpeg?ts=20210910380704"],
   },
   {
     id: "rocklands-reservoir",
@@ -545,7 +545,7 @@ export const destinations: Destination[] = [
     ],
     tags: ["free camping", "lake", "Murray cod", "stocked", "boat ramp"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1534766555764-ce878a5e3a2b?w=800&auto=format"],
+    photos: ["https://www.visitgreaterhamilton.com.au/wp-content/uploads/2020/07/rocklands-blog.jpg"],
   },
 
   // ============================================================
@@ -576,7 +576,7 @@ export const destinations: Destination[] = [
       peakWarning: null,
       costNote: 'Half-price camping until 30 June 2027.',
     },
-    photos: ["https://images.unsplash.com/photo-1464863979621-258859e62245?w=800&auto=format"],
+    photos: ["https://www.visitvictoria.com/-/media/atdw/high-country/things-to-do/nature-and-wildlife/national-parks-and-reserves/d128d189e26675205ee8f1113634d22f_1600x1200.jpeg?ts=20211013340455"],
   },
   {
     id: "tullaroop-reservoir",
@@ -597,7 +597,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Rainbow trout", "Brown trout"],
     tags: ["lake", "trout", "fly fishing", "goldfields", "stocked"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1488861859915-4b5a5e57649b?w=800&auto=format"],
+    photos: ["https://www.goldfieldsguide.com.au/places/majorca/tullaroop-reservoir-bucknall-church-rd-12237-718w.jpg"],
   },
   {
     id: "lake-eppalock",
@@ -618,7 +618,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Murray cod", "Golden perch", "Redfin"],
     tags: ["lake", "Murray cod", "stocked", "boat fishing"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=800&auto=format"],
+    photos: ["https://www.goldfieldsguide.com.au/site_images/location_headers/326_20190106DSC4387.jpg"],
   },
   {
     id: "goulburn-river-seymour",
@@ -642,7 +642,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Murray cod", "Golden perch", "Redfin"],
     tags: ["free camping", "river", "Murray cod", "stocked"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1516298773066-f28a4e7d4e27?w=800&auto=format"],
+    photos: ["https://media.flow-mer.org.au/wp-content/uploads/2024/06/Goulburn-River-at-Seymour-sml.jpg"],
   },
   {
     id: "hepburn-lagoon",
@@ -663,7 +663,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["lake", "fly fishing", "trout", "stocked", "goldfields"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1434725049428-3aa9a3d79099?w=800&auto=format"],
+    photos: ["https://www.goldfieldsguide.com.au/site_images/location_headers/489_20201108DSC2381.jpg"],
   },
   {
     id: "lauriston-reservoir",
@@ -684,7 +684,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "lake", "trout", "stocked", "quiet", "close to Doug"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1476231682828-37e571bc172f?w=800&auto=format"],
+    photos: ["https://coliban.com.au/files/2021-08/Lauriston%20Header.jpg"],
   },
   {
     id: "cairn-curran-reservoir",
@@ -705,7 +705,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Murray cod", "Golden perch", "Redfin"],
     tags: ["free camping", "lake", "Murray cod", "stocked"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1468276311594-df7cb65d8df6?w=800&auto=format"],
+    photos: ["https://www.goldfieldsguide.com.au/site_images/location_headers/166_2017082920170829162850.jpg"],
   },
   {
     id: "butts-reserve-maldon",
@@ -726,7 +726,7 @@ export const destinations: Destination[] = [
     fishSpecies: [],
     tags: ["free camping", "gold history", "2WD", "facilities", "granite"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1444464592143-7f6a1d40400b?w=800&auto=format"],
+    photos: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0JAB5u_S9MJXfO94FBJBSaJDBKjz-hekDLw&s"],
   },
 
   // ============================================================
@@ -751,7 +751,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Bream", "Australian salmon", "Trout", "Mulloway"],
     tags: ["free camping", "coastal", "river", "Great Ocean Walk", "fishing"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&auto=format"],
+    photos: ["https://wildlifetours.com.au/wp-content/uploads/Aire-River-Escarpment-Lookout-Walk-800x800.webp"],
   },
   {
     id: "lerderderg-gorge",
@@ -772,7 +772,7 @@ export const destinations: Destination[] = [
     fishSpecies: [],
     tags: ["free camping", "gorge", "close to Melbourne", "bushwalks", "wombats"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800&auto=format"],
+    photos: ["https://vwi-prod-s301.s3.amazonaws.com/cg-images/poi/large/3800_14755.jpg"],
   },
 
   // ============================================================
@@ -797,7 +797,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout", "Rainbow trout"],
     tags: ["free camping", "river", "trout", "fly fishing", "trophy water", "stocked"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1606215349678-e78f9c9c7a41?w=800&auto=format"],
+    photos: ["https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjVxfS_OLHupOAGk8Tagp-fcOyfiCez45WLxlnkOWeEdj3qTjTW9Y89TRLPR1WXYQXANftHyUe8WKWehK1EPfORehIdqg3q2o80brdyRYKOSQSPL7OH3pB8_rFE4J6egrg-wX7sL1Cd7ik/s1600/39-GOPR0836.jpg"],
   },
   {
     id: "waranga-basin",
@@ -818,7 +818,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Golden perch", "Murray cod", "Redfin"],
     tags: ["free camping", "lake", "golden perch", "stocked", "state forest"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?w=800&auto=format"],
+    photos: ["https://fishingmad.com.au/wp-content/uploads/2021/07/Waranga-Basin-Fishing-Guide.jpg"],
   },
   {
     id: "ovens-river-wangaratta",
@@ -839,7 +839,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout", "Macquarie perch (catch & release)"],
     tags: ["free camping", "river", "trout", "native fish", "stocked"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&auto=format"],
+    photos: ["https://scontent.fsyd3-1.fna.fbcdn.net/v/t1.6435-9/119198749_195261118626611_8249050855488084855_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=13d280&_nc_ohc=PSjwvGM5yZAQ7kNvwGImpls&_nc_oc=AdrF7nT4rI_rK-HN8dLoPA9VN0xbwP4KOcMD_MjZcsbVJfiCgsBJUHjgtbSQ6IAhck0&_nc_zt=23&_nc_ht=scontent.fsyd3-1.fna&_nc_gid=ISKWVEOSpwrxUqPDjuRgwg&_nc_ss=7a389&oh=00_Af2aXNuDv_WCeqJyb-x-NlhNFgTWjaC1jPoFAIPW_8saXg&oe=69FE5DC8"],
   },
 
   // ============================================================
@@ -864,7 +864,7 @@ export const destinations: Destination[] = [
     fishSpecies: [],
     tags: ["free camping", "volcano", "unique", "close to Melbourne", "pine forest"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=800&auto=format"],
+    photos: ["https://daylesfordmacedonlife.com.au/wp-content/uploads/2020/11/Hanging-Rock-sm-1.jpg"],
   },
   {
     id: "lake-purrumbete",
@@ -885,7 +885,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Chinook salmon", "Brown trout"],
     tags: ["volcanic lake", "trophy fish", "salmon", "deep water", "kayak fishing"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1517489065-f2b04e720e0e?w=800&auto=format"],
+    photos: ["https://i.ytimg.com/vi/IhjAV4FVbqo/maxresdefault.jpg"],
   },
   {
     id: "buchan-river-caves",
@@ -906,7 +906,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Australian bass", "Brown trout"],
     tags: ["caves", "river", "bass", "trout", "East Gippsland"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=800&auto=format"],
+    photos: ["https://assets.visitgippsland.com.au/images/_1200x630_crop_center-center_82_none/The-Bluff-Reserve-Buchan-lady-walking-on-rock-island-swimming.jpeg?mtime=1681532688"],
   },
   {
     id: "dargo-river",
@@ -927,7 +927,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout", "Blackfish"],
     tags: ["free camping", "river", "trout", "4wd access", "remote", "pub"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1504309092620-4d0ec726efa4?w=800&auto=format"],
+    photos: ["https://assets.visitgippsland.com.au/imager/e4a83e4652b0a9a74b735733e171d4cd/49220/Dargo-fly-fishing-crop_a4c6e964b3bbb5d614accc5299743405.jpg"],
   },
   {
     id: "poplars-west-gippsland",
@@ -948,7 +948,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "river", "trout", "close to Melbourne", "quiet"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=800&auto=format"],
+    photos: ["https://www.greatforestnationalpark.com.au/wp-content/uploads/2022/11/Poplars-Campground-NooJee.jpg"],
   },
 
   // ============================================================
@@ -973,7 +973,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Rainbow trout", "Brown trout"],
     tags: ["trophy trout", "stocked", "pondage", "accessible"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1516903442223-b4e33ff63d4e?w=800&auto=format"],
+    photos: ["https://www.visitvictoria.com/-/media/atdw/high-country/places-to-stay/caravan-and-camping/3d1009004d3acd62d2b7f52dfbd8356a_1600x1200.jpeg?ts=20230809310509"],
   },
   {
     id: "nariel-creek",
@@ -994,7 +994,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Rainbow trout", "Brown trout"],
     tags: ["free camping", "river", "trout", "Golden Tag", "stocked", "remote"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1547036967-3738ebd30bfa?w=800&auto=format"],
+    photos: ["https://flylife.com.au/wp-content/uploads/2019/10/xNariel01-236v2-1920.jpg"],
   },
   {
     id: "buffalo-river-retreat",
@@ -1015,7 +1015,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout", "Macquarie perch (catch & release)"],
     tags: ["free camping", "river", "trout", "native fish", "stocked"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format"],
+    photos: ["https://www.visitmyrtlefordvic.com.au/wp-content/uploads/sites/44/River-buffalo-myrtleford-16_9.jpg"],
   },
   {
     id: "holland-creek-tatong",
@@ -1036,7 +1036,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "creek", "trout", "stocked", "quiet", "close to Hesko"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1471879832106-c7ab9e0cee23?w=800&auto=format"],
+    photos: ["https://www.gbcma.vic.gov.au/images/sites/gbcma/_cache/500_both_4D5FCBBF487B3A2778922DF9319E2D1F.jpg"],
   },
   {
     id: "rocky-valley-reservoir",
@@ -1057,7 +1057,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Chinook salmon", "Rainbow trout"],
     tags: ["alpine", "reservoir", "salmon", "trout", "mountain", "wildflowers"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1454942901704-3272a18ab8ee?w=800&auto=format"],
+    photos: ["https://listings.rdp.tourismnortheast.com.au/wp-content/uploads/sites/6/2016/08/8a7239610943c203bf88d2b5410012ab53360c13.jpeg"],
   },
   {
     id: "mitta-mitta-river",
@@ -1078,7 +1078,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Murray cod", "Brown trout"],
     tags: ["free camping", "river", "Murray cod", "trout", "stocked", "underrated"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1534067783941-3b7e9ef3abfe?w=800&auto=format"],
+    photos: ["https://upload.wikimedia.org/wikipedia/commons/c/c7/Mitta_Mitta_in_full_flow_through_drought_-_6543.jpg"],
   },
   {
     id: "upper-goulburn-woods-point",
@@ -1099,7 +1099,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "river", "trout", "gold history", "remote", "stocked"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format"],
+    photos: ["https://www.visitvictoria.com/-/media/atdw/high-country/things-to-do/nature-and-wildlife/parks-and-gardens/82f4bab2c100dfd83b17d8dd415eb6d0_1600x1200.jpeg?ts=20210604010824"],
   },
 
   // ============================================================
@@ -1124,7 +1124,7 @@ export const destinations: Destination[] = [
     fishSpecies: [],
     tags: ["free camping", "swimming hole", "state forest", "hidden gem", "quiet"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1432405252046-c6e21e8b59b3?w=800&auto=format"],
+    photos: ["https://www.visitvictoria.com/-/media/atdw/gippsland/see-and-do/nature-and-wildlife/lakes-and-waterways/b38c73d534a42438f692a7b98066e6f9_1600x1200.jpeg?ts=20250901300654"],
   },
   {
     id: "ada-river",
@@ -1145,7 +1145,7 @@ export const destinations: Destination[] = [
     fishSpecies: [],
     tags: ["free camping", "river", "old growth", "tree ferns", "close to Melbourne"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1448375240403-adef9a32e4b1?w=800&auto=format"],
+    photos: ["https://scontent.fsyd3-1.fna.fbcdn.net/v/t39.30808-6/500228682_595914663518306_4066332517539158528_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=13d280&_nc_ohc=lCoF8mOlyykQ7kNvwEHVny0&_nc_oc=AdrwmV9UBz0YPHg7lp7gDJkzaTdlNiQksQXtD8PTP7pXae_cs-KJUTy9KKF4qIr4M-Q&_nc_zt=23&_nc_ht=scontent.fsyd3-1.fna&_nc_gid=jkgrw8it0OiB1gvmGwPeUA&_nc_ss=7a389&oh=00_Af19pHzHmq5uydIkgZpXSLV4XGn_bhJu-ooHAjJgKq71gg&oe=69DCE4CB"],
   },
   {
     id: "tyers-lake",
@@ -1166,7 +1166,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Estuary perch"],
     tags: ["free camping", "lake", "perch", "stocked", "quiet"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1519592437770-40f0e23cc5e5?w=800&auto=format"],
+    photos: ["https://upload.wikimedia.org/wikipedia/commons/0/0e/Lake_Tyers%2C_Gippsland_Lakes%2C_Victoria%2C_Australia.jpg"],
   },
   {
     id: "snowy-river",
@@ -1187,7 +1187,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Australian bass"],
     tags: ["free camping", "river", "bass", "stocked", "remote", "wilderness"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=800&auto=format"],
+    photos: ["https://static.wixstatic.com/media/3f41e6_94ae71895487446d97f76db94d9e81f7~mv2.jpeg/v1/fill/w_4032,h_2268,al_c,q_90/IMG_1481.jpeg"],
   },
   {
     id: "wellington-river-licola",
@@ -1208,7 +1208,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "river", "numbered sites", "facilities", "gateway to Wonnangatta"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1504701954957-2dceea6b5bb1?w=800&auto=format"],
+    photos: ["https://www.parks.vic.gov.au/-/media/project/pv/main/parks/images/places-to-see/alpine-national-park/tali-karng_alpine-national-park_1920x800.jpg?rev=8a120893a21e4c16a0ba373917ee8ec3&la=en&h=800&w=1920&hash=4EF24F5952DC41739070E170AED3A52B"],
   },
   {
     id: "gippsland-lakes-90-mile",
@@ -1229,7 +1229,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Estuary perch", "Dusky flathead", "Bream", "Tailor"],
     tags: ["lake system", "coastal", "stocked", "variety of fishing"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1506697498-17af7d0e4dfd?w=800&auto=format"],
+    photos: ["https://www.visiteastgippsland.com.au/wp-content/uploads/2025/07/Lakes-Entrance-aerial-86-scaled.jpg"],
   },
 
   // ============================================================
@@ -1254,7 +1254,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Golden perch"],
     tags: ["free camping", "river", "golden perch", "stocked", "close to Doug"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1503614472-8c93d56e92ce?w=800&auto=format"],
+    photos: ["https://dynamic-media-cdn.tripadvisor.com/media/photo-o/23/09/f3/4f/view.jpg?w=900&h=500&s=1"],
   },
   {
     id: "andersons-garden",
@@ -1275,7 +1275,7 @@ export const destinations: Destination[] = [
     fishSpecies: [],
     tags: ["free camping", "4wd trails", "close to Melbourne", "gold history"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800&auto=format"],
+    photos: ["https://cdn.exploroz.com/images/places/102193_0__TN1000x800.jpg?gid=37318"],
   },
   {
     id: "laanecoorie-reservoir",
@@ -1296,7 +1296,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Golden perch"],
     tags: ["free camping", "reservoir", "golden perch", "stocked", "goldfields"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1484515991647-531d28589ec6?w=800&auto=format"],
+    photos: ["https://goldencountry.com.au/wp-content/uploads/2024/08/Lake-Laanecoorie.jpg"],
   },
   {
     id: "loddon-river-bridgewater",
@@ -1317,7 +1317,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Murray cod", "Golden perch"],
     tags: ["free camping", "river", "Murray cod", "golden perch", "stocked"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1518176258769-f227c798150e?w=800&auto=format"],
+    photos: ["https://img1.wsimg.com/isteam/ip/abf7cbe1-cf29-4c8b-ae14-24a40e15a2d0/loddonriver.jpg"],
   },
   {
     id: "malmsbury-reservoir",
@@ -1338,7 +1338,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["free camping", "reservoir", "trout", "stocked", "historic", "close to Doug"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1516912481800-0788d785db93?w=800&auto=format"],
+    photos: ["https://www.goldfieldsguide.com.au/places/malmsbury/malmsbury-reservoir-12599-718w.jpg"],
   },
 
   // ============================================================
@@ -1363,7 +1363,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Rainbow trout"],
     tags: ["lake", "trout", "stocked", "Grampians walks", "boat ramp"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1495571619891-71f1e80f4b22?w=800&auto=format"],
+    photos: ["https://www.grampianspoint.com.au/wp-content/uploads/2017/10/Lake-Fyans-1-e1568267352133-990x280.webp"],
   },
   {
     id: "horseshoe-bend-wimmera",
@@ -1384,7 +1384,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Silver perch", "Redfin"],
     tags: ["free camping", "river", "Red River Gums", "swimming", "canoeing"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1523712999610-f77fbcfc3770?w=800&auto=format"],
+    photos: ["https://campedia.s3.ap-southeast-2.amazonaws.com/business/Horseshoe_Bend_Camping_Ground_1652091006739_1286_0.png"],
   },
   {
     id: "green-hill-lake-ararat",
@@ -1405,7 +1405,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Brown trout"],
     tags: ["lake", "trout", "stocked", "birdwatching"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1560707854-3df14c9dc7ba?w=800&auto=format"],
+    photos: ["https://greenhilllake.com.au/wp-content/uploads/2013/03/camp-where-ever-you-like-along-the-lake.jpg?w=800"],
   },
 
   // ============================================================
@@ -1430,7 +1430,7 @@ export const destinations: Destination[] = [
     fishSpecies: [],
     tags: ["free camping", "waterfall", "rainforest", "wildlife", "river"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1511497584788-876760111969?w=800&auto=format"],
+    photos: ["https://images.world-of-waterfalls.com/Stevenson_Falls_17_040_11172017.jpg"],
   },
   {
     id: "lake-colac-meredith-park",
@@ -1451,7 +1451,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Rainbow trout"],
     tags: ["free camping", "lake", "trout", "stocked", "Great Ocean Road"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1440778303-8e01d9b4e12f?w=800&auto=format"],
+    photos: ["https://www.4wdingaustralia.com/wp-content/uploads/2023/03/Lake-Colac-Camping.jpg"],
   },
   {
     id: "bear-gully-walkerville",
@@ -1478,7 +1478,7 @@ export const destinations: Destination[] = [
       peakWarning: null,
       costNote: "Half-price camping until Jun 2027.",
     },
-    photos: ["https://images.unsplash.com/photo-1505118380757-91138d46c599?w=800&auto=format"],
+    photos: ["https://assets.visitgippsland.com.au/imager/7bc0ee636b3b83484fc3b9348863bd22/49405/Beach-AccessResize_e5c6c49c20acaba6dafae7265be1344f.jpg"],
   },
 
   // ============================================================
@@ -1503,7 +1503,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Murray cod", "Golden perch", "Redfin"],
     tags: ["free camping", "river", "Murray cod", "historic town"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format"],
+    photos: ["https://cdn.britannica.com/49/115749-050-FA83EF2C/Murray-River-Echuca-Victoria-Austl.jpg"],
   },
   {
     id: "gunbower-creek",
@@ -1524,7 +1524,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Murray cod", "Golden perch"],
     tags: ["free camping", "river", "Murray cod", "stocked", "Red Gum forest", "birdlife"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1540979388789-6cee522b5c35?w=800&auto=format"],
+    photos: ["https://upload.wikimedia.org/wikipedia/commons/e/ed/Gunbower_Creek_canoeing_area_in_Gunbower_National_Park.jpg"],
   },
   {
     id: "major-creek-nagambie",
@@ -1545,7 +1545,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Murray cod", "Golden perch", "Redfin"],
     tags: ["free camping", "river", "Murray cod", "backwater", "quiet", "forum tip"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1561434732-7a5e5cbe3edf?w=800&auto=format"],
+    photos: ["https://optimise2.assets-servd.host/big-bandicoot/production/images/locations/20190310180311l2FwD_5.jpg?w=935&h=526&q=80&auto=format&fit=clip&dm=1576257971&s=55ac591265e43fafc25679f08a09c728"],
   },
   {
     id: "kow-swamp",
@@ -1566,7 +1566,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Golden perch"],
     tags: ["free camping", "swamp", "golden perch", "stocked", "birdwatching"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1500534314209-a157d0e0dff8?w=800&auto=format"],
+    photos: ["https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1e/80/c1/99/kow-swamp.jpg?w=1000&h=-1&s=1"],
   },
   {
     id: "lake-hume",
@@ -1587,7 +1587,7 @@ export const destinations: Destination[] = [
     fishSpecies: ["Golden perch", "Murray cod", "Brown trout", "Redfin"],
     tags: ["lake", "massive", "stocked", "golden perch", "boat fishing"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1501426026826-31c667bdf23d?w=800&auto=format"],
+    photos: ["https://vwi-prod-s301.s3.amazonaws.com/cg-images/poi/large/5472_23783.jpg"],
   },
 
   // ============================================================
@@ -1612,7 +1612,7 @@ export const destinations: Destination[] = [
     fishSpecies: [],
     tags: ["free camping", "close to Melbourne", "heritage", "bushwalks"],
     bookingInfo: { requiresBooking: false, bookingUrl: null, advanceNotice: null, peakWarning: null, costNote: null },
-    photos: ["https://images.unsplash.com/photo-1448375240403-adef9a32e4b1?w=800&auto=format"],
+    photos: ["https://www.parks.vic.gov.au/-/media/project/pv/main/parks/images/places-to-see/kurth-kiln-regional-park/picnic-ground-kurth-kiln-regional-park-1920x1124.jpg?rev=17ebce1aa67a47f6a45ed24666ac6f58&la=en&h=450&w=768&hash=CB773E47825EE7A6684361A6822F82B1"],
   },
   {
     id: "upper-yarra-reservoir",
@@ -1639,7 +1639,7 @@ export const destinations: Destination[] = [
       peakWarning: null,
       costNote: "Half-price camping until Jun 2027.",
     },
-    photos: ["https://images.unsplash.com/photo-1505533321630-a99c4ff00de4?w=800&auto=format"],
+    photos: ["https://www.parks.vic.gov.au/-/media/project/pv/main/parks/images/places-to-see/upper-yarra-reservoir/upper-yarra-reservoir-park_1920x1124-1.jpg?rev=6d12b8d63afe441491f31d6f02471245"],
   },
 ];
 
