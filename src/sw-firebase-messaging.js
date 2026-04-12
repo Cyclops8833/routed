@@ -2,7 +2,19 @@ import { precacheAndRoute } from 'workbox-precaching'
 import { clientsClaim } from 'workbox-core'
 
 // Workbox precaching (injected by VitePWA)
-precacheAndRoute(self.__WB_MANIFEST)
+// Exclude Firebase Auth handler from SW routing — intercepting /__/auth/ breaks OAuth in PWA mode
+precacheAndRoute(self.__WB_MANIFEST, {
+  ignoreURLParametersMatching: [/.*/],
+  directoryIndex: null,
+  cleanURLs: false,
+})
+
+// Pass Firebase Auth handler requests straight to the network — never cache them
+self.addEventListener('fetch', (event) => {
+  if (event.request.url.includes('/__/auth/')) {
+    event.respondWith(fetch(event.request))
+  }
+})
 self.skipWaiting()
 clientsClaim()
 
