@@ -32,10 +32,10 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
   **Plans:** 4 plans
   **Requirements:** [NOTIF-01, NOTIF-02, NOTIF-03, NOTIF-04, NOTIF-05, NOTIF-06, NOTIF-07, NOTIF-08]
   Plans:
-  - [ ] 07-01-PLAN.md — FCM infrastructure: types, firebase init, CF Worker relay, service worker
-  - [ ] 07-02-PLAN.md — Token registration hook + contextual permission prompt
-  - [ ] 07-03-PLAN.md — Notification triggers: vote, confirm, propose, approaching
-  - [ ] 07-04-PLAN.md — Shame notifications (72hr + daily) + end-to-end smoke test
+  - [x] 07-01-PLAN.md — FCM infrastructure: types, firebase init, CF Worker relay, service worker
+  - [x] 07-02-PLAN.md — Token registration hook + contextual permission prompt
+  - [x] 07-03-PLAN.md — Notification triggers: vote, confirm, propose, approaching
+  - [x] 07-04-PLAN.md — Shame notifications (72hr + daily) + end-to-end smoke test
 
 - [ ] Phase 8: Trip chat / comments — per-trip message thread, real-time via Firestore
 - [ ] Phase 9: More destinations — expand beyond 70 curated spots with photos
